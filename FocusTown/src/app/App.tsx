@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react"
 import { Application } from "pixi.js"
-
 import { SimulationEngine } from "../simulation/engine/SimulationEngine"
 import { CityScene } from "../rendering/scenes/CityScene"
 import { TILE_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from "../simulation/config/worldConfig"
+import { HUD } from "../ui/HUD"
 
 const engine = new SimulationEngine()
 
@@ -21,6 +21,8 @@ function App() {
   const citySceneRef = useRef<CityScene | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const initializedRef = useRef(false)
+
+  const [selectedCitizen, setSelectedCitizen] = useState<any>(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -48,7 +50,7 @@ function App() {
 
       appRef.current = app
 
-      citySceneRef.current = new CityScene(app)
+      citySceneRef.current = new CityScene(app, (citizen) => {setSelectedCitizen(citizen)})
 
       containerRef.current?.appendChild(app.canvas)
     }
@@ -63,35 +65,45 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!appRef.current) return
-
-    const app = appRef.current
-
-    citySceneRef.current?.render(simulationState.citizens, simulationState.buildings, simulationState.tiles)
+    citySceneRef.current?.render(
+      simulationState.citizens,
+      simulationState.buildings,
+      simulationState.tiles
+    )
   }, [simulationState])
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if(!citySceneRef.current) return
+
+      if(event.key === "ArrowUp") {
+        citySceneRef.current.moveCamera(0,20);
+      }
+      if(event.key === "ArrowDown") {
+        citySceneRef.current.moveCamera(0,-20);
+      }
+      if(event.key === "ArrowLeft") {
+        citySceneRef.current.moveCamera(20,0);
+      }
+      if(event.key === "ArrowRight") {
+        citySceneRef.current.moveCamera(-20,0);
+      }
+
+      window.addEventListener("keydown", handleKeyDown)
+
+      return () => {
+        window.removeEventListener("keydown", handleKeyDown)
+  }}}, [])
+
   return (
-    <div>
-      <h1 style={{ color: "white" }}>
-        FocusTown
-      </h1>
+    <>
       <div ref={containerRef} />
-
-      <p style={{ color: "white" }}>
-        Time: {simulationState.time.toFixed(2)} | Day: {simulationState.day}
-      </p>
-
-      {simulationState.citizens.map((citizen: any) => (
-      <div key={citizen.id} style={{color: "white", marginBottom: "10px",}}>
-        <div>{citizen.name}</div>
-        <div>Energy: {citizen.energy.toFixed(0)}</div>
-        <div>Hunger: {citizen.hunger.toFixed(0)}</div>
-        <div>Mood: {citizen.mood.toFixed(0)}</div>
-        <div>Money: {citizen.money.toFixed(0)}</div>
-      </div>
-      ))}
-
-    </div>
+  
+      <HUD
+        simulationState={simulationState}
+        selectedCitizen={selectedCitizen}
+      />
+    </>
   )
 }
 

@@ -1,4 +1,4 @@
-import { Application, Graphics } from "pixi.js"
+import { Application, Graphics, Container } from "pixi.js"
 import { Citizen } from "../../simulation/entities/Citizen"
 import { WORLD_HEIGHT, WORLD_WIDTH, TILE_SIZE } from "../../simulation/config/worldConfig"
 import { Building } from "../../simulation/entities/Building"
@@ -6,13 +6,19 @@ import { Tile } from "../../simulation/world/Tiles"
 
 export class CityScene {
   private app: Application
+  private onCitizenClick?: (citizen: Citizen) => void
+  private worldContainer = new Container();
+  private cameraX = 0;
+  private cameraY = 0;
 
-  constructor(app: Application) {
+  constructor(app: Application, onCitizenClick?: (citizen: Citizen) => void) {
     this.app = app
+    this.onCitizenClick = onCitizenClick
+    this.app.stage.addChild(this.worldContainer)
   }
 
   render(citizens: Citizen[], buildings: Building[], tiles: Tile[]) {
-    this.app.stage.removeChildren()
+    this.worldContainer.removeChildren()
     
     this.drawGrid()
 
@@ -29,7 +35,7 @@ export class CityScene {
         }
 
         graphics.stroke({width: 1, color: 0x222222})
-        this.app.stage.addChild(graphics)
+        this.worldContainer.addChild(graphics)
     })
 
     buildings.forEach((building) => {
@@ -44,11 +50,13 @@ export class CityScene {
 
       graphics.fill(building.type === "house" ? 0x3498db : 0xe74c3c)
 
-      this.app.stage.addChild(graphics)
+      this.worldContainer.addChild(graphics)
     })
 
     citizens.forEach((citizen) => {
       const graphics = new Graphics()
+      graphics.eventMode = "static";
+      graphics.cursor = "pointer";
 
       graphics.circle(
         citizen.x * TILE_SIZE + TILE_SIZE / 2,
@@ -64,7 +72,11 @@ export class CityScene {
         graphics.fill(0x00ff00)
       }
 
-      this.app.stage.addChild(graphics)
+      graphics.on("pointerdown", () => {
+        this.onCitizenClick?.(citizen)
+      })
+
+      this.worldContainer.addChild(graphics)
     })
     
   }
@@ -76,9 +88,16 @@ export class CityScene {
 
           title.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
           title.stroke({width: 1, color: 0x555555})
-          this.app.stage.addChild(title)
+          this.worldContainer.addChild(title)
         }
     }
   }
 
+  moveCamera(x: number, y: number) {
+    this.cameraX += x
+    this.cameraY += y
+
+    this.worldContainer.x = this.cameraX
+    this.worldContainer.y = this.cameraY
+  }
 }
