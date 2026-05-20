@@ -1,5 +1,278 @@
 # Projet-perso
 
+# FocusTown
+
+FocusTown is a real-time autonomous city simulation built with modern web technologies.
+The project combines:
+
+* city-building simulation
+* autonomous AI agents
+* behavioral systems
+* economy simulation
+* productivity concepts
+* real-time rendering
+
+The long-term vision is to create a living virtual city where citizens evolve dynamically based on their needs, routines, emotions, productivity, and environment.
+
+---
+
+# Core Idea
+
+FocusTown explores the concept of:
+
+## “a city that reflects human focus and productivity.”
+
+Every citizen is autonomous and simulated independently.
+
+Citizens:
+
+* work
+* eat
+* sleep
+* earn money
+* move through the city
+* react to their needs
+* follow routines
+* make decisions
+
+The simulation is designed to evolve into a complex emergent system where large-scale city behavior appears naturally from simple individual rules.
+
+---
+
+# Current Features
+
+## Simulation Engine
+
+* Real-time simulation loop
+* Tick-based architecture
+* Modular systems architecture
+* Autonomous entities
+
+## Citizens
+
+Each citizen has:
+
+* position
+* energy
+* hunger
+* mood
+* money
+* workplace
+* home
+* restaurant target
+* dynamic movement path
+
+Citizens can:
+
+* move autonomously
+* go to work
+* return home
+* eat when hungry
+* recover energy
+* earn and spend money
+
+---
+
+# AI Systems
+
+## Movement System
+
+Controls:
+
+* movement
+* navigation
+* path following
+
+## Needs System
+
+Simulates:
+
+* hunger
+* fatigue
+* mood
+
+## Economy System
+
+Handles:
+
+* salaries
+* restaurant spending
+* money flow
+
+## Pathfinding System
+
+Generates:
+
+* tile-based paths
+* route navigation
+* movement steps
+
+---
+
+# World Simulation
+
+The world is:
+
+* tile-based
+* procedurally generated
+* scalable
+
+Current tiles:
+
+* grass
+* roads
+
+Current buildings:
+
+* houses
+* offices
+* restaurants
+
+---
+
+# Rendering
+
+The project uses:
+
+## PixiJS
+
+for:
+
+* high-performance rendering
+* real-time simulation visualization
+* scalable 2D graphics
+
+Features:
+
+* tile rendering
+* citizen rendering
+* building rendering
+* camera movement
+* zoom system
+
+---
+
+# UI
+
+The interface is built with:
+
+## React
+
+The HUD displays:
+
+* current day
+* current time
+* citizen statistics
+* selected citizen information
+
+---
+
+# Architecture
+
+The project follows a modular architecture inspired by:
+
+* simulation engines
+* game engines
+* ECS-inspired systems
+* city builders
+
+```txt
+src/
+├── simulation/
+│   ├── engine/
+│   ├── entities/
+│   ├── systems/
+│   ├── world/
+│   └── config/
+│
+├── rendering/
+│   └── scenes/
+│
+├── ui/
+│
+├── app/
+│
+└── shared/
+```
+
+---
+
+# Technologies
+
+* React
+* TypeScript
+* PixiJS
+* Vite
+* Tauri
+
+---
+
+# Long-Term Vision
+
+Planned future systems include:
+
+* advanced pathfinding (A*)
+* traffic simulation
+* social interactions
+* procedural city generation
+* dynamic economy
+* personality traits
+* relationships
+* schedules
+* jobs and industries
+* zoning system
+* weather
+* crime
+* education
+* productivity analytics
+* multiplayer shared cities
+* AI-generated citizen behaviors
+
+---
+
+# Goals of the Project
+
+This project is designed to:
+
+* learn advanced software architecture
+* explore simulation systems
+* practice game engine concepts
+* experiment with emergent AI
+* build a unique personal project
+* learn scalable frontend architecture
+* understand autonomous systems
+
+---
+
+# Inspiration
+
+Inspired by:
+
+* The Sims
+* RimWorld
+* Cities: Skylines
+* SimCity 4
+* Dwarf Fortress
+* Factorio
+
+---
+
+# Philosophy
+
+FocusTown is not just a game prototype.
+
+It is an experimental simulation sandbox focused on:
+
+* emergent behavior
+* autonomous systems
+* human productivity modeling
+* digital societies
+* scalable simulation architecture
+
+The project aims to progressively evolve from a simple simulation into a living autonomous world.
+
+
+
 # Roadmap
 
 ## V1 — Foundation

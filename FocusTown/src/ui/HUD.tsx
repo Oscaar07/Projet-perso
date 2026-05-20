@@ -57,46 +57,23 @@ type Props = {
             <div>
               Money: {" "} {selectedCitizen.money.toFixed(0)}
             </div>
+            <div>
+              Diligence:{" "} {selectedCitizen.personality.diligence.toFixed(2)}
+            </div>
+            <div>
+              Laziness:{" "} {selectedCitizen.personality.laziness.toFixed(2)}
+            </div>
+            <div>
+              Sociability:{" "} {selectedCitizen.personality.sociability.toFixed(2)}
+            </div>
+            <div>
+              Friends:{" "} {selectedCitizen.relationships.filter((r:any) => r.friendship > 20).length}
+            </div>
           </div>
         ) : (
           <div>
             No citizen selected
           </div>
-        )}
-        
-        {simulationState.citizens.map(
-          (citizen: any) => (
-            <div
-              key={citizen.id}
-              style={{
-                marginBottom: "16px",
-              }}
-            >
-              <strong>
-                {citizen.name}
-              </strong>
-  
-              <div>
-                Energy:{" "}
-                {citizen.energy.toFixed(0)}
-              </div>
-  
-              <div>
-                Hunger:{" "}
-                {citizen.hunger.toFixed(0)}
-              </div>
-  
-              <div>
-                Mood:{" "}
-                {citizen.mood.toFixed(0)}
-              </div>
-  
-              <div>
-                Money:{" "}
-                {citizen.money.toFixed(0)}
-              </div>
-            </div>
-          )
         )}
       </div>
     )

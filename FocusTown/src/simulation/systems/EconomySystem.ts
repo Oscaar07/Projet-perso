@@ -6,7 +6,7 @@ export class EconomySystem {
       const atWork = Math.abs(citizen.x - citizen.workX) < 0.5 &&Math.abs(citizen.y - citizen.workY) < 0.5;
 
       if (atWork) {
-        citizen.money += 0.05
+        citizen.money += 0.02 + citizen.personality.diligence * 0.08
       }
 
       const atRestaurant = Math.abs(citizen.x - citizen.restaurantX) < 0.5 &&Math.abs(citizen.y - citizen.restaurantY) < 0.5

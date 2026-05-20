@@ -73,27 +73,53 @@ function App() {
   }, [simulationState])
 
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if(!citySceneRef.current) return
+    function handleKeyDown(
+      event: KeyboardEvent
+    ) {
+      if (!citySceneRef.current) return
+  
+      const speed = 20
+  
+      if (event.key === "ArrowUp") {
+        citySceneRef.current.moveCamera(0,speed);
+      }
+  
+      if (event.key === "ArrowDown") {
+        citySceneRef.current.moveCamera(0, -speed);
+      }
+  
+      if (event.key === "ArrowLeft") {
+        citySceneRef.current.moveCamera(speed, 0);
+      }
+  
+      if (event.key === "ArrowRight") {
+        citySceneRef.current.moveCamera(-speed, 0);
+      }
+    }
+  
+    window.addEventListener("keydown", handleKeyDown);
 
-      if(event.key === "ArrowUp") {
-        citySceneRef.current.moveCamera(0,20);
-      }
-      if(event.key === "ArrowDown") {
-        citySceneRef.current.moveCamera(0,-20);
-      }
-      if(event.key === "ArrowLeft") {
-        citySceneRef.current.moveCamera(20,0);
-      }
-      if(event.key === "ArrowRight") {
-        citySceneRef.current.moveCamera(-20,0);
-      }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [])
 
-      window.addEventListener("keydown", handleKeyDown)
+  useEffect(() => {
+    function handleWheel(event: WheelEvent) {
+      if (!citySceneRef.current) return
 
-      return () => {
-        window.removeEventListener("keydown", handleKeyDown)
-  }}}, [])
+      event.preventDefault()
+
+      const delta = event.deltaY > 0 ? -0.1 : 0.1;
+
+      citySceneRef.current.setZoom(Math.max(0.5,Math.min(3,citySceneRef.current.getZoom()  + delta)));
+    }
+    window.addEventListener("wheel", handleWheel, { passive: false })
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel)
+    }
+  }, [])
 
   return (
     <>

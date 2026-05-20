@@ -4,90 +4,71 @@ import { Building } from "../entities/Building"
 import { Tile } from "../world/Tiles"
 import { NeedsSystem } from "../systems/NeedsSystem"
 import { EconomySystem } from "../systems/EconomySystem"
+import { WORLD_HEIGHT, WORLD_WIDTH } from "../config/worldConfig"
+import { PathfindingSystem } from "../systems/PathfindingSystem"
+import { BuildingGenerator } from "../world/BuildingGenerator"
+import { SocialSystem } from "../systems/SocialSystem"
 
 export class SimulationEngine {
   private tickCount = 0
 
-  private citizens: Citizen[] = [
-    {
-        id: 1,
-        name: "Alice",
-
-        x: 2,
-        y: 2,
-
-        energy: 100,
-        mood: 100,
-
-        homeX: 2,
-        homeY: 2,
-
-        workX: 10,
-        workY: 5,
-
-        targetX: 10,
-        targetY: 5,
-
-        hunger:100,
-        restaurantX: 15,
-        restaurantY: 8,
-        money: 100,
-    },
-    {
-        id: 2,
-        name: "Bob",
-
-        x: 5,
-        y: 5,
-
-        energy: 100,
-        mood: 100,
-
-        homeX: 2,
-        homeY: 2,
-
-        workX: 10,
-        workY: 5,
-
-        targetX: 10,
-        targetY: 5,
-        
-        hunger:100,
-        restaurantX: 15,
-        restaurantY: 8,
-        money: 100,
-    },
-]
-
+  private citizens: Citizen[] = []
   private movementSystem = new MovementSystem()
-  private buildings: Building[] = [
-    {
-        id: 1,
-        type: "house",
-        x: 2,
-        y: 2,
-    },
-    {
-        id: 2,
-        type: "office",
-        x: 10,
-        y: 5,
-    },
-    {
-        id: 3,
-        type: "restaurant",
-        x: 15,
-        y: 8,
-    },
-  ]
+  private buildings: Building[] = []
   private tiles: Tile[] = []
   private time = 8;
   private day = 1;
   private needsSystem = new NeedsSystem()
   private economySystem = new EconomySystem()
+  private pathfindingSystem = new PathfindingSystem()
+  private buildingGenerator = new BuildingGenerator()
+  private socialSystem = new SocialSystem()
 
   constructor() {
     this.generateWorld();
+    this.buildings = this.buildingGenerator.generate();
+    const houses = this.buildings.filter((b)=>b.type === "house");
+    const offices = this.buildings.filter((b)=>b.type === "office");
+    const restaurants = this.buildings.filter((b)=>b.type === "restaurant"); 
+
+    for (let i = 0; i < 10; i++) {
+      const home =houses[Math.floor(Math.random() *houses.length)]
+      const office = offices[Math.floor(Math.random() * offices.length)]
+      const restaurant = restaurants[Math.floor(Math.random() * restaurants.length)]
+      this.citizens.push({
+        id: i,
+      
+        name: `Citizen ${i}`,
+      
+        x: home.x,
+        y: home.y,
+      
+        targetX: office.x,
+        targetY: office.y,
+      
+        homeX: home.x,
+        homeY: home.y,
+      
+        workX: office.x,
+        workY: office.y,
+      
+        restaurantX: restaurant.x,
+        restaurantY: restaurant.y,
+      
+        energy: 100,
+        hunger: 100,
+        mood: 100,
+        money: 100,
+      
+        path: [],
+        personality: {
+          diligence: Math.random(),
+          sociability: Math.random(),
+          laziness: Math.random(),
+        },
+        relationships: [],
+      })
+    }
   }
 
   tick() {
@@ -100,10 +81,12 @@ export class SimulationEngine {
       this.day++
     }
 
+    this.pathfindingSystem.update(this.citizens, this.tiles)
     this.movementSystem.update(this.citizens)
     this.needsSystem.update(this.citizens)
     this.economySystem.update(this.citizens)
-
+    this.socialSystem.update(this.citizens)
+    
     this.citizens.forEach((citizen) => {
         if (citizen.energy < 20) {
             citizen.targetX = citizen.homeX
@@ -149,23 +132,25 @@ export class SimulationEngine {
   }
   
   private generateWorld() {
-  for (let x = 0; x < 20; x++) {
-    for (let y = 0; y < 12; y++) {
+  for (let x = 0; x < WORLD_WIDTH; x++) {
+    for (let y = 0; y < WORLD_HEIGHT; y++) {
       this.tiles.push({
         x,
         y,
         type: "grass",
+        movementCost: 3,
       })
     }
   }
 
-  for (let x = 0; x < 20; x++) {
+  for (let x = 0; x < WORLD_WIDTH; x++) {
     const tile = this.tiles.find(
       (t) => t.x === x && t.y === 6
     )
 
     if (tile) {
       tile.type = "road"
+      tile.movementCost = 1
     }
   }
   }

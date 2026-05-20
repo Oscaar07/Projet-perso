@@ -10,11 +10,16 @@ export class CityScene {
   private worldContainer = new Container();
   private cameraX = 0;
   private cameraY = 0;
-
+  private camaraZoom = 1;
+  
   constructor(app: Application, onCitizenClick?: (citizen: Citizen) => void) {
     this.app = app
     this.onCitizenClick = onCitizenClick
     this.app.stage.addChild(this.worldContainer)
+  }
+
+  getZoom() {
+    return this.camaraZoom
   }
 
   render(citizens: Citizen[], buildings: Building[], tiles: Tile[]) {
@@ -67,9 +72,9 @@ export class CityScene {
       if(citizen.mood > 70) {
         graphics.fill(0x00ff00)
       }else if(citizen.mood > 40) {
-        graphics.fill(0x00ff00)
+        graphics.fill(0xffff00)
       }else {
-        graphics.fill(0x00ff00)
+        graphics.fill(0xff0000)
       }
 
       graphics.on("pointerdown", () => {
@@ -84,11 +89,11 @@ export class CityScene {
   drawGrid() {
     for (let x = 0; x <= WORLD_WIDTH; x++) {
         for (let y = 0; y <= WORLD_HEIGHT; y++) {
-          const title = new Graphics()
+          const tile = new Graphics()
 
-          title.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-          title.stroke({width: 1, color: 0x555555})
-          this.worldContainer.addChild(title)
+          tile.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+          tile.stroke({width: 1, color: 0x555555})
+          this.worldContainer.addChild(tile)
         }
     }
   }
@@ -99,5 +104,10 @@ export class CityScene {
 
     this.worldContainer.x = this.cameraX
     this.worldContainer.y = this.cameraY
+  }
+
+  setZoom(zoom: number) {
+    this.camaraZoom = zoom
+    this.worldContainer.scale.set(this.camaraZoom)
   }
 }

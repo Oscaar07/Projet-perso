@@ -15,4 +15,14 @@ export type Citizen = {
     restaurantX: number;
     restaurantY: number;
     money:number;
+    path: {x: number, y: number}[];
+    personality: {
+        diligence: number
+        sociability: number
+        laziness: number
+      }
+    relationships: {
+        citizenId: number;
+        friendship: number;
+    }[];
  }
