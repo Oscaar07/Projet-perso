@@ -4,6 +4,7 @@ import { SimulationEngine } from "../simulation/engine/SimulationEngine"
 import { CityScene } from "../rendering/scenes/CityScene"
 import { TILE_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from "../simulation/config/worldConfig"
 import { HUD } from "../ui/HUD"
+import { Weather } from "../simulation/world/Weather"
 
 const engine = new SimulationEngine()
 
@@ -15,6 +16,8 @@ function App() {
     tiles: [],
     time: 8,
     day: 1,
+    timeOfDay: "morning",
+    weather: "sunny" as Weather,
   })
 
   const appRef = useRef<Application | null>(null)
@@ -23,6 +26,16 @@ function App() {
   const initializedRef = useRef(false)
 
   const [selectedCitizen, setSelectedCitizen] = useState<any>(null)
+  const [selectedBuilding, setSelectedBuilding] = useState<any>(null)
+
+
+  const [buildMode, setBuildMode] = useState<"house" | "office" | "restaurant" | "road" | null>(null)
+  const buildModeRef = useRef<"house" | "office" | "restaurant" | "road" | null>(null)
+
+  useEffect(() => {
+    buildModeRef.current = buildMode
+    citySceneRef.current?.setBuildMode(buildMode)
+  }, [buildMode])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -50,7 +63,28 @@ function App() {
 
       appRef.current = app
 
-      citySceneRef.current = new CityScene(app, (citizen) => {setSelectedCitizen(citizen)})
+
+      citySceneRef.current = new CityScene(app,
+
+            (citizen) => {setSelectedCitizen(citizen)},
+
+            (building) => {setSelectedBuilding(building)},
+
+            (x, y) => {const currentBuildMode =buildModeRef.current
+              console.log("build mode",currentBuildMode)
+
+              if (!currentBuildMode)return
+
+              if (currentBuildMode === "road") {
+                engine.addRoad(x,y)
+              } else {
+                engine.addBuilding(currentBuildMode,x,y)
+              }
+
+              setBuildMode(null)
+              setSimulationState(engine.getState())
+            }
+        )
 
       containerRef.current?.appendChild(app.canvas)
     }
@@ -68,7 +102,12 @@ function App() {
     citySceneRef.current?.render(
       simulationState.citizens,
       simulationState.buildings,
-      simulationState.tiles
+      simulationState.tiles,
+      simulationState.timeOfDay,
+      simulationState.weather,
+      selectedBuilding?.id,
+      selectedCitizen?.id,
+      buildMode
     )
   }, [simulationState])
 
@@ -123,11 +162,36 @@ function App() {
 
   return (
     <>
+      <div
+        style={{display: "flex", gap: "10px", marginBottom: "10px",}}>
+        <button onClick={() => setBuildMode("house")}>
+          Build House
+        </button>
+
+        <button onClick={() =>setBuildMode("office")}>
+          Build Office
+        </button>
+
+        <button onClick={() => setBuildMode("restaurant")}>
+          Build Restaurant
+        </button>
+
+        <button onClick={() => setBuildMode("road")}>
+          Build Road
+        </button>
+
+        <button onClick={() => setBuildMode(null)}>
+          Cancel
+        </button>
+      </div>
+
       <div ref={containerRef} />
   
       <HUD
         simulationState={simulationState}
         selectedCitizen={selectedCitizen}
+        selectedBuilding={selectedBuilding}
+        buildMode={buildMode}
       />
     </>
   )

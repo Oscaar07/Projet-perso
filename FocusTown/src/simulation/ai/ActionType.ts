@@ -1,0 +1,1 @@
+export type ActionType = | "sleep" | "eat" | "work" | "socialize" | "relax" | "wander"

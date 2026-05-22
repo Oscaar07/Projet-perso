@@ -11,6 +11,9 @@ export class BuildingGenerator {
                 type: "house",
                 x,
                 y: 4,
+                capacity: 4,
+                comfort: Math.random() * 100,
+                cleanliness: 100,
             })
 
             buildings.push({
@@ -18,6 +21,9 @@ export class BuildingGenerator {
                 type: "office",
                 x,
                 y: 10,
+                capacity: 999,  
+                comfort: 50,
+                cleanliness: 100,
             })
 
             buildings.push({
@@ -25,6 +31,9 @@ export class BuildingGenerator {
                 type: "restaurant",
                 x,
                 y: 16,
+                capacity: 999,
+                comfort: 50,
+                cleanliness: 100,
             })
         }
         

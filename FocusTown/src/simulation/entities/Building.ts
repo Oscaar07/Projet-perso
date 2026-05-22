@@ -8,4 +8,7 @@ export type Building = {
   type: BuildingType
   x: number
   y: number
+  capacity: number
+  comfort: number
+  cleanliness: number
 }

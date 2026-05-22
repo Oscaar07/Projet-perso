@@ -8,6 +8,13 @@ import { WORLD_HEIGHT, WORLD_WIDTH } from "../config/worldConfig"
 import { PathfindingSystem } from "../systems/PathfindingSystem"
 import { BuildingGenerator } from "../world/BuildingGenerator"
 import { SocialSystem } from "../systems/SocialSystem"
+import { JobSystem } from "../systems/JobSystem"
+import { Weather } from "../world/Weather"
+import { HealthSystem } from "../systems/HealthSystem"
+import { HousingSystem } from "../systems/HousingSystem"
+import { UtilityAI } from "../ai/UtilityAI"
+import { ScheduleSystem } from "../systems/ScheduleSystem"
+import { MemorySystem } from "../systems/MemorySystem"
 
 export class SimulationEngine {
   private tickCount = 0
@@ -23,6 +30,13 @@ export class SimulationEngine {
   private pathfindingSystem = new PathfindingSystem()
   private buildingGenerator = new BuildingGenerator()
   private socialSystem = new SocialSystem()
+  private jobSystem = new JobSystem()
+  private healthSystem = new HealthSystem()
+  private housingSystem = new HousingSystem()
+  private weather: Weather = "sunny"
+  private utilityAI = new UtilityAI()
+  private scheduleSystem = new ScheduleSystem()
+  private memorySystem = new MemorySystem()
 
   constructor() {
     this.generateWorld();
@@ -35,6 +49,9 @@ export class SimulationEngine {
       const home =houses[Math.floor(Math.random() *houses.length)]
       const office = offices[Math.floor(Math.random() * offices.length)]
       const restaurant = restaurants[Math.floor(Math.random() * restaurants.length)]
+      const jobs = ["developer","artist","engineer","merchant","scientist",] as const
+      const job =jobs[Math.floor(Math.random() * jobs.length)]
+
       this.citizens.push({
         id: i,
       
@@ -67,6 +84,19 @@ export class SimulationEngine {
           laziness: Math.random(),
         },
         relationships: [],
+        job: job,
+        stress: 0,
+        motivation: 100,
+        hygiene: 100,
+        fun: 100,
+        health: 100,
+        isSick: false,
+        homeId: home.id,
+        currentAction: "",
+        chronotype: Math.random() < 0.5 ? "morning" : "night",
+        workDesire: 0,
+        sleepDesire: 0,
+        memories: [],
       })
     }
   }
@@ -79,28 +109,44 @@ export class SimulationEngine {
     if (this.time >= 24) {
       this.time = 0
       this.day++
+      this.updateWeather()
     }
 
+    this.memorySystem.update(this.citizens, this.tickCount)
+    this.scheduleSystem.update(this.citizens, this.time)
     this.pathfindingSystem.update(this.citizens, this.tiles)
     this.movementSystem.update(this.citizens)
-    this.needsSystem.update(this.citizens)
+    this.needsSystem.update(this.citizens, this.weather)
+    this.healthSystem.update(this.citizens)
+    this.housingSystem.update(this.citizens, this.buildings)
     this.economySystem.update(this.citizens)
     this.socialSystem.update(this.citizens)
+    this.jobSystem.update(this.citizens)
     
     this.citizens.forEach((citizen) => {
-        if (citizen.energy < 20) {
-            citizen.targetX = citizen.homeX
-            citizen.targetY = citizen.homeY
-        }else if (citizen.hunger < 30) {
-            citizen.targetX = citizen.restaurantX
-            citizen.targetY = citizen.restaurantY
-        }else if (this.time >= 8 && this.time <= 18) {
-            citizen.targetX = citizen.workX
-            citizen.targetY = citizen.workY
-        }else {
-            citizen.targetX = citizen.homeX
-            citizen.targetY = citizen.homeY
-        }
+
+      const action = this.utilityAI.getBestAction(citizen)
+      citizen.currentAction = action.type
+
+      if(action.type === "sleep") {
+        citizen.targetX = citizen.homeX
+        citizen.targetY = citizen.homeY
+      }else if(action.type === "eat") {
+        citizen.targetX = citizen.restaurantX
+        citizen.targetY = citizen.restaurantY
+      }else if(action.type === "work") {
+        citizen.targetX = citizen.workX
+        citizen.targetY = citizen.workY
+      }else if(action.type === "socialize") {
+        citizen.targetX = citizen.homeX +  1
+        citizen.targetY = citizen.homeY + 1
+      }else if(action.type === "relax") {
+        citizen.targetX = citizen.homeX
+        citizen.targetY = citizen.homeY
+      }else if(action.type === "wander") {
+        citizen.targetX = citizen.x + Math.floor(Math.random() * 3) - 1
+        citizen.targetY = citizen.y + Math.floor(Math.random() * 3) - 1
+      }
     })
 
     this.citizens.forEach((citizen) => {
@@ -128,6 +174,8 @@ export class SimulationEngine {
         tiles: this.tiles,
         time: this.time,
         day: this.day,
+        timeOfDay: this.getTimeOfDay(),
+        weather: this.weather,
     }
   }
   
@@ -138,7 +186,7 @@ export class SimulationEngine {
         x,
         y,
         type: "grass",
-        movementCost: 3,
+        movementCost: 5,
       })
     }
   }
@@ -153,5 +201,81 @@ export class SimulationEngine {
       tile.movementCost = 1
     }
   }
+  }
+
+  getTimeOfDay() {
+    if(this.time >= 6 && this.time < 12)
+      return "morning"
+    else if(this.time >= 12 && this.time < 18)
+      return "day"
+    else if(this.time >= 18 && this.time < 22)
+      return "evening"
+    else
+      return "night"
+  }
+
+  private updateWeather() {
+    const random = Math.random()
+    if(random < 0.6)
+      this.weather = "sunny"
+    else if(random < 0.8)
+      this.weather = "rain"
+    else if(random < 0.95) {
+      this.weather = "fog"
+    }else {
+      this.weather = "storm"}
+  }
+
+  addBuilding(type: "house" | "office" | "restaurant" | "road", x: number, y: number) {
+    console.log("trying to add building", type, x, y)
+    const exists = this.buildings.find((b) => b.x === x && b.y === y)
+    if (exists) {
+      console.log("building already exists", x, y)
+      return
+    }
+
+    const tile = this.tiles.find((t) => t.x === x && t.y === y)
+    if (!tile) {
+      console.log("tile not found", x, y)
+      return
+    }
+    if (tile.type !== "grass") {
+      console.log("tile is not grass", x, y)
+      return
+    }
+
+    this.buildings.push({
+      id: Date.now(),
+      type,
+      x,
+      y,
+      capacity: type === "house" ? 4 : 999,
+      comfort: 50,
+      cleanliness: 100,
+    })
+  }
+
+  getState() {
+    return {
+      tick: this.tickCount,
+      citizens: this.citizens,
+      buildings: this.buildings,
+      tiles: this.tiles,
+      time: this.time,
+      day: this.day,
+      timeOfDay: this.getTimeOfDay(),
+      weather: this.weather,
+    }
+  }
+
+  addRoad(x: number, y: number) {
+    console.log("trying to add road", x, y)
+    const exists = this.tiles.find((t) => t.x === x && t.y === y)
+    if (!exists) {
+      console.log("road not found", x, y)
+      return
+    }
+    exists.type = "road"
+    exists.movementCost = 1
   }
 }
