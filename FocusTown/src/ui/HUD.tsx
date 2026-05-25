@@ -2,7 +2,7 @@ type Props = {
     simulationState: any
     selectedCitizen: any
     selectedBuilding: any
-    buildMode: "house" | "office" | "restaurant" | "road" | null
+    buildMode: "house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null
   }
   
   export function HUD({simulationState, selectedCitizen, selectedBuilding, buildMode}: Props) {
@@ -34,9 +34,17 @@ type Props = {
           Time:{" "}
           {simulationState.time.toFixed(2)}
         </div>
+        <div>
+          Population: {simulationState.citizens.length}
+        </div>
+        <div>
+          Residential Demand: {(simulationState.residentialDemand ?? 0).toFixed(0)}
+        </div>
+        <div>
+          City Money: {(simulationState.cityMoney ?? 0).toFixed(0)}
+        </div>
         <hr />
         <h3>Build Mode :  {" "}{buildMode ?? "None"}</h3>
-
 
         <hr />
         
@@ -118,6 +126,12 @@ type Props = {
             </div>
             <div>
               Negative Work Memories:{" "} {selectedCitizen.memories.filter((memory:any) => memory.type === "work" && memory.value < 0).length}
+            </div>
+            <div>
+              Procrastination:{" "} {selectedCitizen.procrastination.toFixed(0)}
+            </div>
+            <div>
+              Burnout:{" "} {selectedCitizen.burnout.toFixed(0)}
             </div>
           </div>
         ) : (

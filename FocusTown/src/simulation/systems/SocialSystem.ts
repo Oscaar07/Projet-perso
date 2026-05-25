@@ -8,11 +8,8 @@ export class SocialSystem {
           return
 
         const dx = citizen.x - other.x
-
         const dy = citizen.y - other.y
-
         const distance = Math.sqrt(dx * dx + dy * dy)
-
         const close = distance < 2
 
         if (!close) return
@@ -22,19 +19,16 @@ export class SocialSystem {
         );  
 
         if (!relation) {
-          relation = {
-            citizenId: other.id,
-            friendship: 0,
-          }
-
+          relation = {citizenId: other.id, friendship: 0,}
           citizen.relationships.push(relation)
         }
 
-        relation.friendship +=0.02 *citizen.personality.sociability
-
-        if (relation.friendship > 100) {
-          relation.friendship = 100
+        relation.friendship += 0.02 *citizen.personality.sociability
+        if(citizen.stress > 80) {
+          relation.friendship -= 0.05
         }
+
+        relation.friendship = Math.max(0, Math.min(100, relation.friendship))
 
         citizen.mood += 0.01
 

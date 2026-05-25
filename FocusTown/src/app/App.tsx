@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import { Application } from "pixi.js"
+import { Citizen } from "../simulation/entities/Citizen"
+import { Building } from "../simulation/entities/Building"
+import { Tile } from "../simulation/world/Tiles"
 import { SimulationEngine } from "../simulation/engine/SimulationEngine"
 import { CityScene } from "../rendering/scenes/CityScene"
 import { TILE_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from "../simulation/config/worldConfig"
@@ -9,7 +12,18 @@ import { Weather } from "../simulation/world/Weather"
 const engine = new SimulationEngine()
 
 function App() {
-  const [simulationState, setSimulationState] = useState({
+  const [simulationState, setSimulationState] = useState<{
+    tick: number
+    citizens: Citizen[]
+    buildings: Building[]
+    tiles: Tile[]
+    time: number
+    day: number
+    timeOfDay: string
+    weather: Weather
+    cityMoney?: number
+    residentialDemand?: number
+  }>({
     tick: 0,
     citizens: [],
     buildings: [],
@@ -29,8 +43,8 @@ function App() {
   const [selectedBuilding, setSelectedBuilding] = useState<any>(null)
 
 
-  const [buildMode, setBuildMode] = useState<"house" | "office" | "restaurant" | "road" | null>(null)
-  const buildModeRef = useRef<"house" | "office" | "restaurant" | "road" | null>(null)
+  const [buildMode, setBuildMode] = useState<"house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null>(null)
+  const buildModeRef = useRef<"house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null>(null)
 
   useEffect(() => {
     buildModeRef.current = buildMode
@@ -71,17 +85,21 @@ function App() {
             (building) => {setSelectedBuilding(building)},
 
             (x, y) => {const currentBuildMode =buildModeRef.current
-              console.log("build mode",currentBuildMode)
-
               if (!currentBuildMode)return
 
               if (currentBuildMode === "road") {
                 engine.addRoad(x,y)
+              } else if (currentBuildMode === "residential") {
+                engine.addZone("residential",x,y)
+              } else if (currentBuildMode === "commercial") {
+                engine.addZone("commercial",x,y)
               } else {
                 engine.addBuilding(currentBuildMode,x,y)
               }
 
-              setBuildMode(null)
+              if (currentBuildMode !== "road") {
+                setBuildMode(null)
+              }
               setSimulationState(engine.getState())
             }
         )
@@ -178,6 +196,14 @@ function App() {
 
         <button onClick={() => setBuildMode("road")}>
           Build Road
+        </button>
+
+        <button onClick={() => setBuildMode("residential")}>
+          Build Residential
+        </button>
+
+        <button onClick={() => setBuildMode("commercial")}>
+          Build Commercial
         </button>
 
         <button onClick={() => setBuildMode(null)}>

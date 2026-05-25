@@ -7,8 +7,13 @@ export type JobType =
   | "merchant"
   | "scientist"
 
+export interface Relationship {
+    citizenId: string;
+    friendship: number;
+}
+
 export type Citizen = { 
-    id: number;
+    id: string;
     name: string;
     x: number;
     y: number;
@@ -30,10 +35,7 @@ export type Citizen = {
         sociability: number
         laziness: number
       }
-    relationships: {
-        citizenId: number;
-        friendship: number;
-    }[];
+    relationships: Relationship[];
     job: JobType;
     stress: number;
     motivation: number;
@@ -41,10 +43,12 @@ export type Citizen = {
     fun: number;
     health: number;
     isSick: boolean;
-    homeId: number;
+    homeId?: string;
     currentAction: string;
     chronotype: "morning" | "night";
     workDesire: number;
     sleepDesire: number;
     memories: Memory[];
+    procrastination: number;
+    burnout: number;
  }

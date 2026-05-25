@@ -14,8 +14,10 @@ export class CityScene {
   private camaraZoom = 1;
   private hoverTileX = 0;
   private hoverTileY = 0;
-  private buildMode : "house" | "office" | "restaurant" | "road" | null = null;
+  private buildMode : "house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null = null;
   private isDragging = false;
+  private lastDraggedX: number | null = null;
+  private lastDraggedY: number | null = null;
 
   private onBuildingClick?: (building: Building) => void
 
@@ -26,11 +28,61 @@ export class CityScene {
     this.onCitizenClick = onCitizenClick  
     this.onBuildingClick = onBuildingClick
     this.onTileClick = onTileClick
-    this,app.stage.on("pointerdown", () => {
+    this.app.stage.eventMode = "static"
+    this.app.stage.hitArea = this.app.screen
+    this.app.stage.on("pointerdown", () => {
       this.isDragging = true
+      this.lastDraggedX = null
+      this.lastDraggedY = null
+    })
+    // also place initial tile when pointerdown on the stage (for drags started off a graphic)
+    this.app.stage.on("pointerdown", (e: any) => {
+      if (this.buildMode !== "road") return
+      const global = e.data.global
+      const worldX = (global.x - this.worldContainer.x) / this.camaraZoom
+      const worldY = (global.y - this.worldContainer.y) / this.camaraZoom
+      const tx = Math.floor(worldX / TILE_SIZE)
+      const ty = Math.floor(worldY / TILE_SIZE)
+      if (tx < 0 || ty < 0 || tx >= WORLD_WIDTH || ty >= WORLD_HEIGHT) return
+      this.lastDraggedX = tx
+      this.lastDraggedY = ty
+      this.onTileClick?.(tx, ty)
     })
     this.app.stage.on("pointerup", () => {
       this.isDragging = false
+      this.lastDraggedX = null
+      this.lastDraggedY = null
+    })
+
+    // When dragging, track pointer movement and place roads while moving
+    this.app.stage.on("pointermove", (e: any) => {
+      const global = e.data.global
+      // transform screen coords to world coords (account for camera and zoom)
+      const worldX = (global.x - this.worldContainer.x) / this.camaraZoom
+      const worldY = (global.y - this.worldContainer.y) / this.camaraZoom
+
+      const tx = Math.floor(worldX / TILE_SIZE)
+      const ty = Math.floor(worldY / TILE_SIZE)
+
+      // bounds check
+      if (tx < 0 || ty < 0 || tx >= WORLD_WIDTH || ty >= WORLD_HEIGHT) return
+
+      // update hover for every move so the preview follows the cursor everywhere
+      this.hoverTileX = tx
+      this.hoverTileY = ty
+
+      if (!this.isDragging) return
+
+      // only auto-place while in road build mode
+      if (this.buildMode !== "road") return
+
+      // avoid repeating the same tile
+      if (this.lastDraggedX === tx && this.lastDraggedY === ty) return
+
+      this.lastDraggedX = tx
+      this.lastDraggedY = ty
+
+      this.onTileClick?.(tx, ty)
     })
     this.app.stage.addChild(this.worldContainer)
   }
@@ -39,11 +91,20 @@ export class CityScene {
     return this.camaraZoom
   }
 
-  setBuildMode(buildMode: "house" | "office" | "restaurant" | "road" | null) {
+  setBuildMode(buildMode: "house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null) {
     this.buildMode = buildMode
   }
 
-  render(citizens: Citizen[], buildings: Building[], tiles: Tile[], timeOfDay: string, weather: Weather, selectedBuildingId: number, selectedCitizenId: number, buildMode: "house" | "office" | "restaurant" | "road" | null) {
+  render(
+    citizens: Citizen[],
+    buildings: Building[],
+    tiles: Tile[],
+    timeOfDay: string,
+    weather: Weather,
+    selectedBuildingId?: string | number | null,
+    selectedCitizenId?: string | number | null,
+    buildMode?: "house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null
+  ) {
     this.worldContainer.removeChildren()
     
     this.drawGrid()
@@ -53,31 +114,39 @@ export class CityScene {
         graphics.eventMode = "static";
         graphics.cursor = "pointer";
 
-        graphics.rect(tile.x * TILE_SIZE, tile.y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
-        
-        if(tile.type === "grass") {
-            graphics.fill(0x2ecc71)
-        }
-        if(tile.type === "road") {
-            graphics.fill(0x555555)
+        const x = tile.x * TILE_SIZE
+        const y = tile.y * TILE_SIZE
+
+        // Zone coloring has priority so it's clearly visible
+        if (tile.zoneType === "residential") {
+          graphics.beginFill(0x3498db, 0.5)
+        } else if (tile.zoneType === "commercial") {
+          graphics.beginFill(0xf1c40f, 0.5)
+        } else if (tile.type === "grass") {
+          graphics.beginFill(0x2ecc71, 1)
+        } else if (tile.type === "road") {
+          graphics.beginFill(0x555555, 1)
+        } else {
+          graphics.beginFill(0x222222, 1)
         }
 
-        graphics.stroke({width: 1, color: 0x222222})
+        // draw rect with stroke
+        graphics.lineStyle(1, 0x222222)
+        graphics.drawRect(x, y, TILE_SIZE, TILE_SIZE)
+        graphics.endFill()
 
-        if(buildMode) {
+        if (buildMode) {
           graphics.alpha = 0.9
         }
-
 
         graphics.on("pointerover", () => {
           this.hoverTileX = tile.x
           this.hoverTileY = tile.y
-        });
+        })
 
         graphics.on("pointerdown", () => {
           graphics.alpha = 0.5
           this.onTileClick?.(tile.x, tile.y)
-          console.log("tile clicked", tile.x, tile.y)
         })
 
         this.worldContainer.addChild(graphics)
@@ -107,7 +176,7 @@ export class CityScene {
         this.onBuildingClick?.(building)
       })
 
-      if(building.id === selectedBuildingId) {
+      if (selectedBuildingId != null && building.id === selectedBuildingId.toString()) {
         graphics.stroke({width: 3, color: 0xffff00})
       }
 
@@ -137,7 +206,7 @@ export class CityScene {
         this.onCitizenClick?.(citizen)
       })
 
-      if(citizen.id === selectedCitizenId) {
+      if (selectedCitizenId != null && citizen.id === selectedCitizenId.toString()) {
         graphics.stroke({width: 3, color: 0xffff00})
       }
 
@@ -145,6 +214,7 @@ export class CityScene {
     })
     
     const overlay = new Graphics()
+    overlay.eventMode = "none"
 
     overlay.rect(0, 0, WORLD_WIDTH * TILE_SIZE, WORLD_HEIGHT * TILE_SIZE)
     if (timeOfDay === "night") {
@@ -159,6 +229,7 @@ export class CityScene {
     this.worldContainer.addChild(overlay)
 
     const weatherOverlay = new Graphics();
+    weatherOverlay.eventMode = "none"
     weatherOverlay.rect(0, 0, WORLD_WIDTH * TILE_SIZE, WORLD_HEIGHT * TILE_SIZE)
     if(weather === "rain") {
       weatherOverlay.fill({color: 0x3366ff,alpha: 0.15,})
@@ -171,9 +242,17 @@ export class CityScene {
     }
     this.worldContainer.addChild(weatherOverlay)
 
+    const hoverHighlight = new Graphics()
+    hoverHighlight.eventMode = "none"
+    hoverHighlight.rect(this.hoverTileX * TILE_SIZE, this.hoverTileY * TILE_SIZE, TILE_SIZE, TILE_SIZE)
+    hoverHighlight.fill({ color: 0xffffff, alpha: 0.08 })
+    hoverHighlight.stroke({ width: 2, color: 0xffffff, alpha: 0.9 })
+    this.worldContainer.addChild(hoverHighlight)
+
     if(this.buildMode) {
       const canBuild = this.canBuildAt(this.hoverTileX, this.hoverTileY, buildings, tiles);
       const ghost = new Graphics()
+      ghost.eventMode = "none"
       ghost.rect(this.hoverTileX * TILE_SIZE, this.hoverTileY * TILE_SIZE, TILE_SIZE, TILE_SIZE)
       if(this.buildMode === "house") {
         ghost.fill(0x3498db)
@@ -232,5 +311,6 @@ export class CityScene {
     if(tile.type !== "grass") {
       return false
     }
+    return true
   }
 }

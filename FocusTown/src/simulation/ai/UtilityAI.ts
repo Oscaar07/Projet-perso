@@ -13,7 +13,7 @@ export class UtilityAI {
 
     actions.push({type: "eat", score: (100 - citizen.hunger),})
 
-    actions.push({ type: "work", score: citizen.motivation * 0.8 + citizen.workDesire - negativeWorkMemories * 3,})
+    actions.push({ type: "work", score: citizen.motivation * 0.8 + citizen.workDesire - negativeWorkMemories * 3 - citizen.burnout * 0.01,})
 
     actions.push({type: "socialize", score: (100 - citizen.mood) * 0.7 + positiveSocialMemories  * 2,})
 

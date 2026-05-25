@@ -20,7 +20,7 @@ export class ScheduleSystem {
         }
 
         if (time >= 12 && time <= 13) {
-            citizen.hunger -= 0.1
+          citizen.hunger += 0.1
         }
       }
 
@@ -34,7 +34,7 @@ export class ScheduleSystem {
           citizen.sleepDesire = 60
         }
         if (time >= 12 && time <= 13) {
-            citizen.hunger -= 0.1
+          citizen.hunger += 0.1
         }
       }
     })

@@ -5,4 +5,5 @@ export type Tile = {
     y: number;
     type: TileType;
     movementCost: number;
+    zoneType?: "residential" | "commercial"
 }

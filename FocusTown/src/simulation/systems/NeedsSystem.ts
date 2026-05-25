@@ -5,15 +5,9 @@ export class NeedsSystem {
     
     update(citizens: Citizen[], weather: Weather) {
         citizens.forEach((citizen) => {
-            citizen.energy -=0.02 + citizen.personality.diligence * 0.05
-            citizen.hunger -=0.03
 
-            if(citizen.energy < 0) {
-                citizen.energy = 0
-            }
-            if(citizen.hunger < 0) {
-                citizen.hunger = 0
-            }
+            citizen.energy -= 0.02 + citizen.personality.diligence * 0.05
+            citizen.hunger -= 0.03
             citizen.mood = (citizen.energy + citizen.hunger) / 2
 
             citizen.mood += citizen.personality.sociability * 0.02
@@ -25,8 +19,8 @@ export class NeedsSystem {
                 citizen.mood += 0.01
             }
 
-            citizen.hygiene-=0.02
-            citizen.fun-=0.03
+            citizen.hygiene -= 0.02
+            citizen.fun -= 0.03
 
             if(citizen.fun < 30) {
                 citizen.mood -= 0.05
@@ -38,13 +32,8 @@ export class NeedsSystem {
               }
             
             citizen.motivation = citizen.mood - citizen.stress * 0.5
-            if (citizen.motivation < 0) {
-                citizen.motivation = 0
-              }
-              
-            if (citizen.motivation > 100) {
-                citizen.motivation = 100
-            }
+
+            citizen.motivation -= citizen.procrastination * 0.001
 
             if(citizen.stress > 90 && citizen.energy < 20){
                 citizen.mood -= 0.2
@@ -57,7 +46,45 @@ export class NeedsSystem {
             if(citizen.mood > 100) {
                 citizen.mood = 100
             }
+
+            if (citizen.hunger < 30) {
+                if (citizen.money >= 10) {
+                    citizen.money -= 10
+                    citizen.hunger += 40
+                    if (citizen.hunger > 100) citizen.hunger = 100
+                    citizen.mood += 5
+                }
+            }
             
+            //Clamp
+
+            if (citizen.motivation < 0) {
+                citizen.motivation = 0
+              }    
+            if (citizen.motivation > 100) {
+                citizen.motivation = 100
+            }
+
+            if(citizen.hunger > 100) {
+                citizen.hunger = 100
+            }
+            if(citizen.hunger < 0) {
+                citizen.hunger = 0
+            }
+
+            if(citizen.energy > 100) {
+                citizen.energy = 100
+            }
+            if(citizen.energy < 0) {
+                citizen.energy = 0
+            }
+
+            if(citizen.procrastination > 100) {
+                citizen.procrastination = 100
+            }
+            if(citizen.procrastination < 0) {
+                citizen.procrastination = 0
+            }
         })
     }
 }

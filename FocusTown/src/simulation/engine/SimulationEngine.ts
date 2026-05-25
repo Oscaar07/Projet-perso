@@ -15,6 +15,9 @@ import { HousingSystem } from "../systems/HousingSystem"
 import { UtilityAI } from "../ai/UtilityAI"
 import { ScheduleSystem } from "../systems/ScheduleSystem"
 import { MemorySystem } from "../systems/MemorySystem"
+import { PopulationSystem } from "../systems/PopulationSystem"
+import { ProcrastinationSystem } from "../systems/ProcrastinationSystem"
+
 
 export class SimulationEngine {
   private tickCount = 0
@@ -37,6 +40,11 @@ export class SimulationEngine {
   private utilityAI = new UtilityAI()
   private scheduleSystem = new ScheduleSystem()
   private memorySystem = new MemorySystem()
+  private populationSystem = new PopulationSystem()
+  private populationCap = 10
+  private residentialDemand = 50;
+  private cityMoney = 1000;
+  private procrastinationSystem = new ProcrastinationSystem()
 
   constructor() {
     this.generateWorld();
@@ -45,59 +53,65 @@ export class SimulationEngine {
     const offices = this.buildings.filter((b)=>b.type === "office");
     const restaurants = this.buildings.filter((b)=>b.type === "restaurant"); 
 
-    for (let i = 0; i < 10; i++) {
-      const home =houses[Math.floor(Math.random() *houses.length)]
-      const office = offices[Math.floor(Math.random() * offices.length)]
-      const restaurant = restaurants[Math.floor(Math.random() * restaurants.length)]
-      const jobs = ["developer","artist","engineer","merchant","scientist",] as const
-      const job =jobs[Math.floor(Math.random() * jobs.length)]
+    if (houses.length === 0 || offices.length === 0 || restaurants.length === 0) {
+      console.warn("Not enough buildings to spawn initial citizens")
+    } else {
+      for (let i = 0; i < 10; i++) {
+        const home = houses[Math.floor(Math.random() * houses.length)]
+        const office = offices[Math.floor(Math.random() * offices.length)]
+        const restaurant = restaurants[Math.floor(Math.random() * restaurants.length)]
+        const jobs = ["developer","artist","engineer","merchant","scientist",] as const
+        const job = jobs[Math.floor(Math.random() * jobs.length)]
 
-      this.citizens.push({
-        id: i,
-      
-        name: `Citizen ${i}`,
-      
-        x: home.x,
-        y: home.y,
-      
-        targetX: office.x,
-        targetY: office.y,
-      
-        homeX: home.x,
-        homeY: home.y,
-      
-        workX: office.x,
-        workY: office.y,
-      
-        restaurantX: restaurant.x,
-        restaurantY: restaurant.y,
-      
-        energy: 100,
-        hunger: 100,
-        mood: 100,
-        money: 100,
-      
-        path: [],
-        personality: {
-          diligence: Math.random(),
-          sociability: Math.random(),
-          laziness: Math.random(),
-        },
-        relationships: [],
-        job: job,
-        stress: 0,
-        motivation: 100,
-        hygiene: 100,
-        fun: 100,
-        health: 100,
-        isSick: false,
-        homeId: home.id,
-        currentAction: "",
-        chronotype: Math.random() < 0.5 ? "morning" : "night",
-        workDesire: 0,
-        sleepDesire: 0,
-        memories: [],
-      })
+        this.citizens.push({
+          id: crypto.randomUUID(),
+        
+          name: `Citizen ${i}`,
+        
+          x: home.x,
+          y: home.y,
+        
+          targetX: office.x,
+          targetY: office.y,
+        
+          homeX: home.x,
+          homeY: home.y,
+        
+          workX: office.x,
+          workY: office.y,
+        
+          restaurantX: restaurant.x,
+          restaurantY: restaurant.y,
+        
+          energy: 100,
+          hunger: 100,
+          mood: 100,
+          money: 100,
+        
+          path: [],
+          personality: {
+            diligence: Math.random(),
+            sociability: Math.random(),
+            laziness: Math.random(),
+          },
+          relationships: [],
+          job: job,
+          stress: 0,
+          motivation: 100,
+          hygiene: 100,
+          fun: 100,
+          health: 100,
+          isSick: false,
+          homeId: home.id,
+          currentAction: "",
+          chronotype: Math.random() < 0.5 ? "morning" : "night",
+          workDesire: 0,
+          sleepDesire: 0,
+          memories: [],
+          procrastination: 0,
+          burnout: 0,
+        })
+      }
     }
   }
 
@@ -112,18 +126,18 @@ export class SimulationEngine {
       this.updateWeather()
     }
 
+    this.residentialDemand += Math.random() * 2 - 1;
+    if(this.residentialDemand < 0) {
+      this.residentialDemand = 0
+    }
+    if(this.residentialDemand > 100) {
+      this.residentialDemand = 100
+    }
+    
     this.memorySystem.update(this.citizens, this.tickCount)
     this.scheduleSystem.update(this.citizens, this.time)
-    this.pathfindingSystem.update(this.citizens, this.tiles)
-    this.movementSystem.update(this.citizens)
-    this.needsSystem.update(this.citizens, this.weather)
-    this.healthSystem.update(this.citizens)
-    this.housingSystem.update(this.citizens, this.buildings)
-    this.economySystem.update(this.citizens)
-    this.socialSystem.update(this.citizens)
-    this.jobSystem.update(this.citizens)
-    
-    this.citizens.forEach((citizen) => {
+
+     this.citizens.forEach((citizen) => {
 
       const action = this.utilityAI.getBestAction(citizen)
       citizen.currentAction = action.type
@@ -146,8 +160,21 @@ export class SimulationEngine {
       }else if(action.type === "wander") {
         citizen.targetX = citizen.x + Math.floor(Math.random() * 3) - 1
         citizen.targetY = citizen.y + Math.floor(Math.random() * 3) - 1
+        citizen.targetX = Math.max(0, Math.min(WORLD_WIDTH - 1, citizen.targetX))
+        citizen.targetY = Math.max(0, Math.min(WORLD_HEIGHT - 1, citizen.targetY))
       }
     })
+
+    this.procrastinationSystem.update(this.citizens)
+    this.pathfindingSystem.update(this.citizens, this.tiles)
+    this.movementSystem.update(this.citizens)
+    this.needsSystem.update(this.citizens, this.weather)
+    this.healthSystem.update(this.citizens)
+    this.housingSystem.update(this.citizens, this.buildings)
+    this.economySystem.update(this.citizens)
+    this.socialSystem.update(this.citizens)
+    this.jobSystem.update(this.citizens)
+    this.populationSystem.update(this.citizens, this.buildings, this.populationCap, this.residentialDemand)
 
     this.citizens.forEach((citizen) => {
         const atHome = Math.abs(citizen.x - citizen.homeX) < 0.5 && Math.abs(citizen.y - citizen.homeY) < 0.5
@@ -167,6 +194,15 @@ export class SimulationEngine {
         }
     })
 
+    this.autoBuildZones()
+
+    this.collectTaxes()
+    this.payBuildingUpKeep()
+
+    if(this.cityMoney < -1000) {
+      console.warn("game over, you are bankrupt")
+    }
+
     return {
         tick: this.tickCount,
         citizens: this.citizens,
@@ -176,6 +212,8 @@ export class SimulationEngine {
         day: this.day,
         timeOfDay: this.getTimeOfDay(),
         weather: this.weather,
+        cityMoney: this.cityMoney,
+      residentialDemand: this.residentialDemand,
     }
   }
   
@@ -226,33 +264,41 @@ export class SimulationEngine {
       this.weather = "storm"}
   }
 
-  addBuilding(type: "house" | "office" | "restaurant" | "road", x: number, y: number) {
-    console.log("trying to add building", type, x, y)
+  addBuilding(type: "house" | "office" | "restaurant" | "road" | "residential" | "commercial", x: number, y: number) {
+    const cost = type === "house" ? 100 : type === "office" ? 200 : type === "restaurant" ? 300 : 0
     const exists = this.buildings.find((b) => b.x === x && b.y === y)
+
+    if(this.cityMoney < cost) {
+      console.warn("not enough money to build", x, y)
+      return
+    }
+    
     if (exists) {
-      console.log("building already exists", x, y)
+      console.warn("building already exists", x, y)
       return
     }
 
     const tile = this.tiles.find((t) => t.x === x && t.y === y)
     if (!tile) {
-      console.log("tile not found", x, y)
+      console.warn("tile not found", x, y)
       return
     }
     if (tile.type !== "grass") {
-      console.log("tile is not grass", x, y)
+      console.warn("tile is not grass", x, y)
       return
     }
 
     this.buildings.push({
-      id: Date.now(),
+      id: crypto.randomUUID(),
       type,
       x,
       y,
       capacity: type === "house" ? 4 : 999,
       comfort: 50,
       cleanliness: 100,
+      maxResidents: type === "house" ? 4 : undefined,
     })
+    this.cityMoney -= cost
   }
 
   getState() {
@@ -265,17 +311,77 @@ export class SimulationEngine {
       day: this.day,
       timeOfDay: this.getTimeOfDay(),
       weather: this.weather,
+      cityMoney: this.cityMoney,
+      residentialDemand: this.residentialDemand,
     }
   }
 
   addRoad(x: number, y: number) {
-    console.log("trying to add road", x, y)
+    const cost = 25
+
+    if (this.cityMoney < cost) {
+      console.warn("not enough money to build road", x, y)
+      return
+    }
+
     const exists = this.tiles.find((t) => t.x === x && t.y === y)
     if (!exists) {
-      console.log("road not found", x, y)
+      console.warn("road not found", x, y)
       return
     }
     exists.type = "road"
     exists.movementCost = 1
+    this.cityMoney -= cost
+  }
+
+  addZone(type: "residential" | "commercial", x: number, y: number) {
+    const tile = this.tiles.find((t) => t.x === x && t.y === y)
+    if (!tile) {
+      return
+    }
+    if (tile.type !== "grass") {
+      return
+    }
+    tile.zoneType = type
+  }
+
+  private autoBuildZones() {
+
+    this.tiles.forEach((tile) => {
+  
+      if (tile.zoneType === "residential") {
+        const exists = this.buildings.some((building) => building.x === tile.x && building.y === tile.y)
+        if (!exists) {
+          if (Math.random() < 0.001) {  
+            this.buildings.push({ id: crypto.randomUUID(), type: "house", x: tile.x, y: tile.y, capacity: 4, comfort: 50, cleanliness: 100,})
+          }
+        }
+      }
+
+      if (tile.zoneType === "commercial" ) {
+        const exists = this.buildings.some((building) => building.x === tile.x && building.y === tile.y)
+      
+        if (!exists) {
+          if (Math.random() < 0.001) {
+            this.buildings.push({ id: crypto.randomUUID(), type: "restaurant", x: tile.x, y: tile.y, capacity: 999, comfort: 50, cleanliness: 100,})
+          }
+        }
+      }
+    })
+  }
+
+  private collectTaxes() {
+    this.citizens.forEach((citizen) => {
+      const tax = citizen.money * 0.001
+      this.cityMoney += tax
+      citizen.money -= tax
+    })
+  }
+
+  private payBuildingUpKeep() {
+    this.buildings.forEach((building) => {
+      const upKeep = building.type === "house" ? 1 : building.type === "office" ? 2 : building.type === "restaurant" ? 3 : 0
+      this.cityMoney -= upKeep * 0.01
+    })
   }
 }
