@@ -6,6 +6,7 @@ type Props = {
   }
   
   export function HUD({simulationState, selectedCitizen, selectedBuilding, buildMode}: Props) {
+    const bestFriend =[...(selectedCitizen?.relationships ?? [])].sort((a:any, b:any) =>b.friendship -a.friendship)[0];
     return (
       <div
         style={{
@@ -49,7 +50,7 @@ type Props = {
         <hr />
         
         <h3>Selected Citizens</h3>
-
+        
         {selectedCitizen ? (
           <div>
             <div>
@@ -132,6 +133,33 @@ type Props = {
             </div>
             <div>
               Burnout:{" "} {selectedCitizen.burnout.toFixed(0)}
+            </div>
+            <div>
+              Best Friend:{" "} {bestFriend.citizenId ?? "None"}
+            </div>
+            <div>
+              Discipline:{" "} {selectedCitizen.discipline.toFixed(0)}
+            </div>
+            <div>
+              Work Habit:{" "} {selectedCitizen.habits.work.toFixed(0)}
+            </div>
+            <div>
+              Relax Habit:{" "} {selectedCitizen.habits.relax.toFixed(0)}
+            </div>
+            <div>
+              Emotion: {" "} {selectedCitizen.emotionalState}
+            </div>
+
+            <div>
+              Anxiety: {" "} {selectedCitizen.anxiety.toFixed(0)}
+            </div>
+
+            <div>
+              Confidence: {" "} {selectedCitizen.confidence.toFixed(0)}
+            </div>
+
+            <div>
+              Perfectionism: {" "} {selectedCitizen.perfectionism.toFixed(0)}
             </div>
           </div>
         ) : (

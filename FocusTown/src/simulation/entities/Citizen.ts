@@ -51,4 +51,15 @@ export type Citizen = {
     memories: Memory[];
     procrastination: number;
     burnout: number;
+    habits: {
+      work: number;
+      relax: number;
+      socialize: number;
+      wander: number;
+    }
+    discipline: number;
+    anxiety: number;
+    confidence: number;
+    perfectionism: number;
+    emotionalState: "happy" | "neutral" | "sad" | "burnout" | "anxious" ;
  }

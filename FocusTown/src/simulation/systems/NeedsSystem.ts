@@ -27,6 +27,7 @@ export class NeedsSystem {
             }
 
             citizen.stress += citizen.personality.laziness * 0.02
+            
             if (citizen.stress > 70) {
                 citizen.mood -= 0.08
               }
@@ -40,13 +41,7 @@ export class NeedsSystem {
                 citizen.motivation -= 0.2
             }
 
-            if(citizen.mood < 0) {
-                citizen.mood = 0
-            }
-            if(citizen.mood > 100) {
-                citizen.mood = 100
-            }
-
+            
             if (citizen.hunger < 30) {
                 if (citizen.money >= 10) {
                     citizen.money -= 10
@@ -54,6 +49,10 @@ export class NeedsSystem {
                     if (citizen.hunger > 100) citizen.hunger = 100
                     citizen.mood += 5
                 }
+            }
+
+            if(citizen.relationships.length === 0) {
+                citizen.mood -= 0.05
             }
             
             //Clamp
@@ -85,6 +84,13 @@ export class NeedsSystem {
             if(citizen.procrastination < 0) {
                 citizen.procrastination = 0
             }
+
+            if(citizen.mood < 0) {
+                citizen.mood = 0
+            }
+            if(citizen.mood > 100) {
+                citizen.mood = 100
+            }	   
         })
     }
 }

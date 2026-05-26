@@ -61,6 +61,17 @@ export class PopulationSystem {
                         path: [],
                         procrastination: 0,
                         burnout: 0,
+                        habits: {
+                            work: 0,
+                            relax: 0,
+                            socialize: 0,
+                            wander: 0,
+                        },
+                        discipline: Math.random()*100,
+                        anxiety: Math.random()*100,
+                        confidence: Math.random()*100,
+                        perfectionism: Math.random()*100,
+                        emotionalState: "neutral",
                     })
                 }
             }

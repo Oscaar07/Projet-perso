@@ -17,6 +17,8 @@ import { ScheduleSystem } from "../systems/ScheduleSystem"
 import { MemorySystem } from "../systems/MemorySystem"
 import { PopulationSystem } from "../systems/PopulationSystem"
 import { ProcrastinationSystem } from "../systems/ProcrastinationSystem"
+import { HabitSystem } from "../systems/HabitSystem"
+import { EmotionSystem } from "../systems/EmotionSystem"
 
 
 export class SimulationEngine {
@@ -45,6 +47,8 @@ export class SimulationEngine {
   private residentialDemand = 50;
   private cityMoney = 1000;
   private procrastinationSystem = new ProcrastinationSystem()
+  private habitSystem = new HabitSystem()
+  private emotionSystem = new EmotionSystem()
 
   constructor() {
     this.generateWorld();
@@ -110,6 +114,17 @@ export class SimulationEngine {
           memories: [],
           procrastination: 0,
           burnout: 0,
+          habits: {
+            work: 0,
+            relax: 0,
+            socialize: 0,
+            wander: 0,
+          },
+          discipline: Math.random()*100,
+          anxiety: Math.random()*100,
+          confidence: Math.random()*100,
+          perfectionism: Math.random()*100,
+          emotionalState: "neutral",
         })
       }
     }
@@ -164,11 +179,12 @@ export class SimulationEngine {
         citizen.targetY = Math.max(0, Math.min(WORLD_HEIGHT - 1, citizen.targetY))
       }
     })
-
+    this.habitSystem.update(this.citizens)
     this.procrastinationSystem.update(this.citizens)
     this.pathfindingSystem.update(this.citizens, this.tiles)
     this.movementSystem.update(this.citizens)
     this.needsSystem.update(this.citizens, this.weather)
+    this.emotionSystem.update(this.citizens)
     this.healthSystem.update(this.citizens)
     this.housingSystem.update(this.citizens, this.buildings)
     this.economySystem.update(this.citizens)

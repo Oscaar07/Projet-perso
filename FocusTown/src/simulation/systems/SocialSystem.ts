@@ -15,7 +15,7 @@ export class SocialSystem {
         if (!close) return
 
         let relation = citizen.relationships.find((r) =>
-              r.citizenId ===other.id
+              r.citizenId === other.id
         );  
 
         if (!relation) {
@@ -32,9 +32,19 @@ export class SocialSystem {
 
         citizen.mood += 0.01
 
+        citizen.mood += (other.mood - citizen.mood) * 0.001
+
         if (citizen.mood > 100) {
           citizen.mood = 100
         }
+
+        if (other.burnout > 80) {
+          citizen.stress += 0.02
+        }
+      })
+      citizen.relationships.forEach((relation) => {
+        relation.friendship -= 0.01
+        relation.friendship = Math.max(-100,Math.min(100,relation.friendship))
       })
     })
   }

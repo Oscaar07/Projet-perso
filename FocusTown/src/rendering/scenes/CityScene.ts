@@ -194,12 +194,20 @@ export class CityScene {
         8
       )
 
-      if(citizen.mood > 70) {
+      if (citizen.emotionalState === "happy") {
         graphics.fill(0x00ff00)
-      }else if(citizen.mood > 40) {
-        graphics.fill(0xffff00)
-      }else {
+      
+      } else if (citizen.emotionalState ==="sad") {
+        graphics.fill(0x3498db)
+      
+      } else if (citizen.emotionalState ==="burnout") {
         graphics.fill(0xff0000)
+      
+      } else if (citizen.emotionalState === "anxious") {
+        graphics.fill(0xffff00)
+      
+      } else {
+        graphics.fill(0xffffff)
       }
 
       graphics.on("pointerdown", () => {
