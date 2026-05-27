@@ -1,13 +1,13 @@
 import { Citizen } from "../entities/Citizen"
 import { Building } from "../entities/Building"
+import { createCitizen  } from "../entities/CitizenFactory"
 
 export class PopulationSystem {
 
-    private jobs = ["developer","artist","engineer","merchant","scientist",] as const
-
-
     update(citizens: Citizen[], buildings: Building[], populationCap: number, residentialDemand: number) {
         const houses = buildings.filter((b) => b.type === "house")
+        const offices = buildings.filter((b) => b.type === "office")
+        const restaurants = buildings.filter((b) => b.type === "restaurant")
 
         if(citizens.length >= populationCap){
             return
@@ -19,60 +19,22 @@ export class PopulationSystem {
             const averageMood = citizens.reduce((sum, citizen) => sum + citizen.mood, 0) / Math.max(citizens.length, 1)
             const hapinessMultiplier = averageMood / 100
             const spawnChance = residentialDemand * 0.0001 * hapinessMultiplier
+            const workplace = offices[Math.floor(Math.random() * offices.length)]
+            const restaurant = restaurants[Math.floor(Math.random() * restaurants.length)] 
+            if(offices.length === 0 || restaurants.length === 0) {
+                console.warn("Not enough buildings to spawn new citizens")
+                return
+            }
+
 
             if(residents.length < maxResidents) {
                 if(Math.random() < spawnChance) {
-                    citizens.push({
-                        id: crypto.randomUUID(),
+                    citizens.push(createCitizen({
                         name: `Citizen ${citizens.length + 1}`,
-                        x: house.x,
-                        y: house.y,
-                        targetX: house.x,
-                        targetY: house.y,
-                        homeX: house.x,
-                        homeY: house.y,
-                        workX: house.x,
-                        workY: house.y,
-                        restaurantX: house.x,
-                        restaurantY: house.y,
-                        energy: 100,
-                        mood: 100,
-                        hunger: 100,
-                        money: 100,
-                        homeId: house.id,
-                        currentAction: "idle",
-                        chronotype: Math.random() < 0.5 ? "morning" : "night",
-                        workDesire: 0,
-                        sleepDesire: 0,
-                        memories: [],
-                        personality: {
-                            diligence: Math.random(),
-                            sociability: Math.random(),
-                            laziness: Math.random(),
-                        },
-                        relationships: [],
-                        job: this.jobs[Math.floor(Math.random() * this.jobs.length)],
-                        stress: 0,
-                        motivation: 100,
-                        hygiene: 100,
-                        fun: 100,
-                        health: 100,
-                        isSick: false,
-                        path: [],
-                        procrastination: 0,
-                        burnout: 0,
-                        habits: {
-                            work: 0,
-                            relax: 0,
-                            socialize: 0,
-                            wander: 0,
-                        },
-                        discipline: Math.random()*100,
-                        anxiety: Math.random()*100,
-                        confidence: Math.random()*100,
-                        perfectionism: Math.random()*100,
-                        emotionalState: "neutral",
-                    })
+                        home: house,
+                        workplace,
+                        restaurant,
+                    }))
                 }
             }
         })

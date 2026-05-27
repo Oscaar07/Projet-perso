@@ -8,6 +8,7 @@ import { CityScene } from "../rendering/scenes/CityScene"
 import { TILE_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from "../simulation/config/worldConfig"
 import { HUD } from "../ui/HUD"
 import { Weather } from "../simulation/world/Weather"
+import { ProductivitySummary } from "../productivity/types"
 
 const engine = new SimulationEngine()
 
@@ -45,6 +46,21 @@ function App() {
 
   const [buildMode, setBuildMode] = useState<"house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null>(null)
   const buildModeRef = useRef<"house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null>(null)
+
+  const [productivitySummary, setProductivitySummary] = useState<ProductivitySummary>({
+    focusSeconds: 0,
+    distractionSeconds: 0,
+    idleSeconds: 0,
+    breakSeconds: 0,
+    totalTrackedSeconds: 0,
+    averageProductivityScore: 0,
+  })
+
+  function applyProductivitySummary(nextSummary: typeof productivitySummary) {
+  setProductivitySummary(nextSummary)
+  engine.setProductivitySummary(nextSummary)
+  setSimulationState(engine.getState())
+  }
 
   useEffect(() => {
     buildModeRef.current = buildMode
@@ -208,6 +224,37 @@ function App() {
 
         <button onClick={() => setBuildMode(null)}>
           Cancel
+        </button>
+
+        <button onClick={() => applyProductivitySummary({
+          focusSeconds: 1800,
+          distractionSeconds: 0,
+          idleSeconds: 0,
+          breakSeconds: 0,
+          totalTrackedSeconds: 1800,
+          averageProductivityScore: 90,
+        })}>
+          Simulate Focus
+        </button>
+        <button onClick={() => applyProductivitySummary({
+          focusSeconds: 0,
+          distractionSeconds: 1800,
+          idleSeconds: 0,
+          breakSeconds: 0,
+          totalTrackedSeconds: 1800,
+          averageProductivityScore: 20,
+        })}>
+          Simulate Distraction
+        </button>
+        <button onClick={() => applyProductivitySummary({
+          focusSeconds: 0,
+          distractionSeconds: 0,
+          idleSeconds: 0,
+          breakSeconds: 0,
+          totalTrackedSeconds: 0,
+          averageProductivityScore: 0,
+        })}>
+          Clear Productivity
         </button>
       </div>
 

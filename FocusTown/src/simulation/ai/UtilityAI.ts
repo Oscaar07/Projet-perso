@@ -9,17 +9,48 @@ export class UtilityAI {
     const positiveSocialMemories  = citizen.memories.filter((memory) => memory.type === "social" && memory.value > 0).length
     const negativeWorkMemories  = citizen.memories.filter((memory) => memory.type === "work" && memory.value < 0).length
 
-    actions.push({type: "sleep", score: (100 - citizen.energy) *1.2 + citizen.sleepDesire,})
+    actions.push({
+      type: "sleep",
+      score: (100 - citizen.energy) * 1.4 + citizen.sleepDesire + citizen.stress * 0.2,
+    })
 
-    actions.push({type: "eat", score: (100 - citizen.hunger),})
+    actions.push({
+      type: "eat",
+      score: (100 - citizen.hunger) * 1.3,
+    })
 
-    actions.push({ type: "work", score: citizen.motivation * 0.8 + citizen.workDesire - negativeWorkMemories * 3 - citizen.burnout * 0.01 + citizen.habits.work + citizen.discipline +  citizen.perfectionism * 0.5 + citizen.stress * 0.2,})
+    actions.push({
+      type: "work",
+      score:
+        citizen.workDesire +
+        citizen.motivation * 0.35 +
+        citizen.discipline * 0.2 +
+        citizen.perfectionism * 0.1 +
+        citizen.habits.work * 0.2 -
+        citizen.stress * 0.3 -
+        citizen.burnout * 0.5 -
+        negativeWorkMemories * 3,
+    })
 
-    actions.push({type: "socialize", score: (100 - citizen.mood) * 0.7 + positiveSocialMemories  * 2 + citizen.personality.sociability * 20 + citizen.habits.socialize + citizen.confidence * 0.3,})
+    actions.push({
+      type: "socialize",
+      score:
+        (100 - citizen.mood) * 0.7 +
+        positiveSocialMemories * 2 +
+        citizen.personality.sociability * 25 +
+        citizen.habits.socialize * 0.2 +
+        citizen.confidence * 0.1,
+    })
 
-    actions.push({type: "relax", score: citizen.stress + citizen.habits.relax,})
+    actions.push({
+      type: "relax",
+      score: citizen.stress * 1.1 + (100 - citizen.fun) * 0.6 + citizen.burnout * 0.4 + citizen.habits.relax * 0.2,
+    })
 
-    actions.push({type: "wander",score: 5 + citizen.habits.wander + citizen.anxiety * 0.1,})
+    actions.push({
+      type: "wander",
+      score: 5 + citizen.habits.wander * 0.2 + citizen.anxiety * 0.1,
+    })
 
     return actions
   }

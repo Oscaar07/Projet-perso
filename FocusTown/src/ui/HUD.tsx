@@ -1,3 +1,5 @@
+import {getActionScores} from "../simulation/ai/debugActionScores"
+
 type Props = {
     simulationState: any
     selectedCitizen: any
@@ -7,6 +9,7 @@ type Props = {
   
   export function HUD({simulationState, selectedCitizen, selectedBuilding, buildMode}: Props) {
     const bestFriend =[...(selectedCitizen?.relationships ?? [])].sort((a:any, b:any) =>b.friendship -a.friendship)[0];
+    const actionScores = selectedCitizen ? getActionScores(selectedCitizen) : [];
     return (
       <div
         style={{
@@ -49,7 +52,7 @@ type Props = {
 
         <hr />
         
-        <h3>Selected Citizens</h3>
+        <h3>Selected Citizen</h3>
         
         {selectedCitizen ? (
           <div>
@@ -135,7 +138,7 @@ type Props = {
               Burnout:{" "} {selectedCitizen.burnout.toFixed(0)}
             </div>
             <div>
-              Best Friend:{" "} {bestFriend.citizenId ?? "None"}
+              Best Friend:{" "} {bestFriend?.citizenId ?? "None"}
             </div>
             <div>
               Discipline:{" "} {selectedCitizen.discipline.toFixed(0)}
@@ -160,6 +163,14 @@ type Props = {
 
             <div>
               Perfectionism: {" "} {selectedCitizen.perfectionism.toFixed(0)}
+            </div>
+            <div>
+              Action Scores:
+              {actionScores.map((score, index) => (
+                <div key={index}>
+                  {score.type}: {score.score.toFixed(2)}
+                </div>
+              ))}
             </div>
           </div>
         ) : (
@@ -190,6 +201,18 @@ type Props = {
             ) : (
               <div style={{color: "white"}}>No building selected</div>
             )}
+
+        <hr/>
+        <h3>Productivity</h3>
+        <div>
+          Focus:{" "} {simulationState.productivitySummary?.focusSeconds ?? 0} seconds
+        </div>
+        <div>
+          Distraction:{" "} {simulationState.productivitySummary?.distractionSeconds ?? 0} seconds
+        </div>
+        <div>
+          Score:{" "} {(simulationState.productivitySummary?.averageProductivityScore ?? 0).toFixed(0)}
+        </div>
       </div>
     )
   }
