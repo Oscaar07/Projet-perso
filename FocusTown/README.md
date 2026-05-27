@@ -1,43 +1,41 @@
 # FocusTown
 
-FocusTown is a real-time autonomous city simulation powered by behavioral analytics and productivity systems.
-
-The project combines:
-
-* city-building simulation
-* autonomous AI agents
-* behavioral psychology systems
-* productivity analytics
-* economy simulation
-* real-world activity tracking
-* emergent AI-driven societies
-* real-time rendering
-
-The long-term vision is to create a living virtual city where citizens evolve dynamically based on:
-
-* needs
-* routines
-* emotions
-* habits
-* relationships
-* productivity
-* stress
-* environment
-* and eventually the real-world behavior of the user.
+> A real-time autonomous city simulation powered by behavioral analytics, productivity systems, and emergent AI.
 
 ---
 
-# Core Idea
+# Overview
 
-FocusTown explores the concept of:
+FocusTown is an experimental simulation sandbox that combines:
+
+* autonomous AI citizens
+* city-building systems
+* behavioral psychology
+* productivity analytics
+* emergent societies
+* real-world activity tracking
+* real-time simulation
+* desktop productivity monitoring
+
+The long-term vision is to create:
+
+> a living virtual civilization that evolves based on both simulated and real-world human behavior.
+
+---
+
+# Core Concept
+
+FocusTown explores the idea of:
 
 > “a city that reflects human focus and productivity.”
 
-The project merges two concepts:
+The project merges two major systems:
 
-## 1. Autonomous City Simulation
+---
 
-A fully simulated city populated by autonomous citizens.
+# 1. Autonomous City Simulation
+
+A fully simulated city populated by autonomous AI citizens.
 
 Each citizen:
 
@@ -45,48 +43,51 @@ Each citizen:
 * sleeps
 * eats
 * socializes
-* earns money
 * develops habits
-* experiences emotions
 * forms relationships
-* reacts to stress and burnout
+* experiences stress
+* procrastinates
 * follows routines
+* reacts emotionally
 * makes decisions independently
 
-The simulation is designed around emergent systems:
-simple rules generating complex large-scale behaviors.
+The city evolves through emergent systems:
+simple individual rules creating large-scale complex behaviors.
 
 ---
 
-## 2. Real-World Productivity Tracker
+# 2. Productivity & Behavioral Tracker
 
 A desktop productivity tracker capable of detecting:
 
 * distractions
 * alt-tab frequency
 * idle time
+* multitasking
 * doomscrolling
 * focus sessions
-* multitasking
 * deep work
 * burnout patterns
 * behavioral trends
 
-The goal is to connect real-world productivity data directly to the simulation.
+The tracker will eventually synchronize real-world productivity data directly into the simulation.
 
 ---
 
 # The Twist
 
-Your real behavior affects the city.
+Your real-world behavior affects the city.
 
 Examples:
 
-* productive work sessions improve the economy
-* deep work boosts citizen morale
-* distractions increase stress
-* procrastination spreads burnout
-* unhealthy routines destabilize the city
+| Real Behavior     | Simulation Effect        |
+| ----------------- | ------------------------ |
+| Deep work session | Economy improves         |
+| Focused work      | Citizen morale increases |
+| Procrastination   | Stress spreads           |
+| Doomscrolling     | Burnout rises            |
+| Healthy routines  | Society stabilizes       |
+| Multitasking      | Productivity decreases   |
 
 The city becomes a behavioral mirror of the user.
 
@@ -96,16 +97,16 @@ The city becomes a behavioral mirror of the user.
 
 FocusTown is not just a game prototype.
 
-It is an experimental simulation sandbox focused on:
+It is an experimental simulation platform focused on:
 
 * emergent behavior
 * autonomous systems
+* behavioral psychology
 * human productivity modeling
 * digital societies
-* behavioral psychology
 * scalable simulation architecture
 
-The project aims to progressively evolve from a simple simulation into a living autonomous world driven by both simulated and real-world human behavior.
+The project aims to evolve progressively from a simple simulation into a living autonomous world driven by both simulated and real-world behavior.
 
 ---
 
@@ -117,36 +118,39 @@ The project aims to progressively evolve from a simple simulation into a living 
 
 * real-time simulation loop
 * tick-based architecture
-* modular systems architecture
-* ECS-inspired organization
+* modular systems
+* ECS-inspired structure
 * autonomous entities
 
 ---
 
 # Citizens
 
-Each citizen has:
+Each citizen contains:
 
-## Basic Stats
+## Basic Needs
 
-* position
-* energy
 * hunger
+* energy
 * mood
-* money
 * hygiene
 * fun
+* money
 * health
+
+---
 
 ## Personality Traits
 
 * diligence
 * sociability
 * laziness
-* anxiety
-* confidence
-* perfectionism
 * discipline
+* confidence
+* anxiety
+* perfectionism
+
+---
 
 ## Psychological Systems
 
@@ -155,40 +159,45 @@ Each citizen has:
 * procrastination
 * motivation
 * emotional states
-* routines
-* habits
+* behavioral routines
+
+---
 
 ## Social Systems
 
 * friendships
 * relationship persistence
-* social decay
 * emotional contagion
+* social decay
 
-## Locations
+---
+
+## Dynamic Locations
+
+Each citizen has:
 
 * home
 * workplace
-* restaurants
+* restaurant targets
 * dynamic movement targets
 
 ---
 
 # AI Systems
 
-## Utility AI
+# Utility AI
 
 Citizens dynamically choose actions based on:
 
 * needs
-* emotions
-* habits
-* memories
-* routines
-* stress
 * personality
+* memories
+* emotions
+* schedules
+* routines
+* habits
 
-Actions include:
+Current actions:
 
 * work
 * sleep
@@ -199,45 +208,9 @@ Actions include:
 
 ---
 
-## Movement System
+# Habit System
 
-Handles:
-
-* movement
-* path following
-* navigation
-* route execution
-
----
-
-## Pathfinding System
-
-Current:
-
-* tile-based pathfinding
-
-Planned:
-
-* A* pathfinding
-* traffic-aware navigation
-
----
-
-## Needs System
-
-Simulates:
-
-* hunger
-* fatigue
-* mood
-* energy
-* stress
-
----
-
-## Habit System
-
-Citizens progressively build routines over time.
+Citizens progressively build long-term routines.
 
 Examples:
 
@@ -246,58 +219,58 @@ Examples:
 * highly social citizens
 * lazy citizens
 
-Repeated behaviors reinforce future decisions.
+Repeated actions influence future behavior.
 
 ---
 
-## Memory System
+# Memory System
 
 Citizens remember:
 
 * positive experiences
-* negative experiences
+* stressful events
+* work experiences
 * social interactions
-* stressful work sessions
 
-Memories influence future choices and emotional states.
+Memories directly influence future decisions.
 
 ---
 
-## Emotion System
+# Emotion System
 
-Citizens can become:
+Citizens can experience:
 
-* happy
-* neutral
-* sad
-* anxious
-* burned out
-
-Emotions directly affect:
-
-* productivity
-* socialization
-* motivation
-* routines
+* happiness
+* sadness
+* anxiety
+* burnout
 * stress
 
+Emotions influence:
+
+* productivity
+* movement
+* socialization
+* routines
+* decision-making
+
 ---
 
-## Social System
+# Social Simulation
 
 Citizens:
 
 * form friendships
 * influence each other emotionally
-* spread stress
-* experience isolation
-* develop social networks
+* spread stress socially
+* become isolated
+* develop social groups
 
 ---
 
 # World Simulation
 
-## Tile-Based World
+# Tile-Based World
 
 The world is:
 
@@ -320,56 +293,60 @@ Current building types:
 * offices
 * restaurants
 
-Features:
+Buildings support:
 
 * capacity
 * comfort
 * cleanliness
-* zoning support
+* zoning
 
 ---
 
-# City Systems
+# Economy Simulation
 
-## Economy
-
-The economy currently includes:
+Current systems:
 
 * salaries
 * taxes
-* money flow
+* money circulation
 * restaurant spending
 * city budget
 * maintenance costs
 
 ---
 
-## Population
+# Population Simulation
 
-* automatic citizen spawning
-* population cap
+Includes:
+
+* automatic population growth
 * residential demand
+* housing systems
+* population caps
 
 ---
 
-## Zoning
+# Zoning
 
-* residential zones
-* commercial zones
-* auto-generated buildings
+Current zoning types:
+
+* residential
+* commercial
+
+Zones can automatically generate buildings over time.
 
 ---
 
-## Weather & Time
+# Weather & Time
 
 Includes:
 
 * day/night cycle
-* time simulation
-* weather states
+* weather simulation
 * chronotypes
+* schedules
 
-Weather:
+Weather states:
 
 * sunny
 * rain
@@ -395,7 +372,6 @@ Current rendering features:
 * tile rendering
 * citizen rendering
 * building rendering
-* emotional color indicators
 * camera movement
 * zoom system
 
@@ -407,102 +383,46 @@ The interface is built with:
 
 # React
 
-Current HUD features:
+Current UI systems:
 
-* current day/time
 * citizen inspector
 * building inspector
-* productivity analytics
-* emotional analytics
 * build mode
-* city statistics
+* analytics HUD
+* simulation statistics
+* time controls
 
 ---
 
 # Productivity Simulation
 
-FocusTown already includes:
+FocusTown already simulates:
 
-* procrastination mechanics
-* burnout mechanics
+* procrastination
+* burnout
 * stress accumulation
-* motivation systems
-* behavioral routines
+* motivation
+* routines
 * productivity scoring
 
 This forms the foundation for future real-world productivity integration.
 
 ---
 
-# Productivity Analytics Vision
+# Architecture
 
-The long-term goal is to build a desktop productivity tracker capable of:
+FocusTown follows a modular architecture inspired by:
 
-## Activity Monitoring
-
-* active window tracking
-* application usage
-* idle detection
-* keyboard activity
-* mouse activity
-
-## Browser Monitoring
-
-* website tracking
-* domain categorization
-* distraction detection
-* doomscroll detection
-
-## Focus Analytics
-
-* deep work detection
-* context switching analysis
-* focus scoring
-* burnout prediction
-* productivity trends
+* simulation engines
+* city builders
+* game engines
+* ECS-inspired systems
 
 ---
 
-# Real World ↔ Simulation Sync
+# Folder Structure
 
-The final vision is to connect:
-
-# real productivity data directly to the city simulation.
-
-Examples:
-
-## Real Deep Work
-
-* boosts economy
-* increases citizen morale
-* reduces burnout
-
-## Procrastination
-
-* spreads stress
-* lowers productivity
-* destabilizes social systems
-
-## Healthy Habits
-
-* improve city growth
-* increase citizen happiness
-* strengthen relationships
-
-The city becomes a living reflection of:
-
-* focus
-* discipline
-* routines
-* stress
-* burnout
-* productivity
-
----
-
-# Current Architecture
-
-```txt id="w7m2pk"
+```txt
 src/
 ├── simulation/
 │   ├── ai/
@@ -524,6 +444,266 @@ src/
 
 ---
 
+# Directory Responsibilities
+
+## simulation/
+
+Contains all simulation logic.
+
+### ai/
+
+Decision-making systems.
+
+Examples:
+
+* UtilityAI
+* behavior scoring
+* action evaluation
+
+---
+
+### engine/
+
+Core simulation orchestration.
+
+Responsible for:
+
+* ticks
+* system execution
+* world updates
+
+---
+
+### entities/
+
+Simulation entities.
+
+Examples:
+
+* citizens
+* buildings
+* relationships
+
+---
+
+### systems/
+
+Independent simulation systems.
+
+Examples:
+
+* movement
+* social simulation
+* economy
+* memory
+* psychology
+
+---
+
+### world/
+
+World generation and environmental logic.
+
+Examples:
+
+* map generation
+* zoning
+* weather
+* tiles
+
+---
+
+### config/
+
+Global constants and configuration.
+
+---
+
+# Tick Lifecycle
+
+The simulation uses a deterministic tick-based architecture.
+
+Each tick updates the entire world state.
+
+---
+
+# Tick Flow
+
+```txt
+Simulation Tick
+│
+├── update time
+├── update weather
+├── update schedules
+├── update memories
+├── update AI decisions
+├── update pathfinding
+├── update movement
+├── update needs
+├── update emotions
+├── update economy
+├── update social systems
+├── update population
+├── update city economy
+└── render frame
+```
+
+---
+
+# Simulation Philosophy
+
+FocusTown prioritizes:
+
+* emergence
+* modularity
+* scalability
+* deterministic logic
+* autonomous behaviors
+
+The goal is to create large-scale believable behavior from simple local interactions.
+
+---
+
+# Systems Documentation
+
+# UtilityAI
+
+Responsible for selecting the best action for a citizen.
+
+Inputs:
+
+* needs
+* emotions
+* memories
+* routines
+* personality
+* stress
+
+Outputs:
+
+* work
+* sleep
+* eat
+* socialize
+* relax
+* wander
+
+---
+
+# MovementSystem
+
+Handles:
+
+* movement
+* path following
+* navigation execution
+
+---
+
+# PathfindingSystem
+
+Current:
+
+* simple tile-based pathfinding
+
+Planned:
+
+* A*
+* traffic-aware routing
+* road optimization
+
+---
+
+# NeedsSystem
+
+Updates:
+
+* hunger
+* energy
+* mood
+* hygiene
+* stress
+
+---
+
+# EconomySystem
+
+Handles:
+
+* salaries
+* taxes
+* spending
+* money circulation
+
+---
+
+# SocialSystem
+
+Handles:
+
+* friendships
+* emotional contagion
+* social decay
+* interactions
+
+---
+
+# MemorySystem
+
+Stores:
+
+* emotional memories
+* positive experiences
+* negative experiences
+* work stress
+
+Memories influence future decisions.
+
+---
+
+# ScheduleSystem
+
+Controls:
+
+* work schedules
+* sleep routines
+* chronotypes
+* productivity windows
+
+---
+
+# PopulationSystem
+
+Handles:
+
+* spawning
+* housing availability
+* population growth
+* demand simulation
+
+---
+
+# Rendering Pipeline
+
+Rendering is separated from simulation logic.
+
+Simulation:
+
+* updates state
+
+Rendering:
+
+* visualizes state only
+
+Benefits:
+
+* maintainability
+* scalability
+* debugging
+* optimization
+
+---
+
 # Technologies
 
 ## Frontend
@@ -533,7 +713,11 @@ src/
 * PixiJS
 * Vite
 
+---
+
 ## Desktop App (Planned)
+
+Planned:
 
 * Tauri
 * Rust
@@ -542,12 +726,249 @@ Alternative:
 
 * Electron
 
+---
+
 ## Database
 
 Planned:
 
 * SQLite
 * PostgreSQL
+
+---
+
+# Installation
+
+# Requirements
+
+* Node.js 18+
+* npm or pnpm
+* Git
+
+Optional:
+
+* Rust
+* Tauri CLI
+
+---
+
+# Setup
+
+Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/focustown.git
+```
+
+Enter the project:
+
+```bash
+cd focustown
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start development server:
+
+```bash
+npm run dev
+```
+
+---
+
+# Build
+
+Production build:
+
+```bash
+npm run build
+```
+
+Preview production build:
+
+```bash
+npm run preview
+```
+
+---
+
+# Planned Desktop Build
+
+```bash
+npm install -D @tauri-apps/cli
+npm run tauri dev
+```
+
+---
+
+# Contribution Guide
+
+# General Rules
+
+* keep systems modular
+* avoid giant files
+* one responsibility per system
+* avoid tightly coupled systems
+* avoid direct cross-system dependencies
+
+---
+
+# Code Philosophy
+
+Preferred:
+
+```txt
+SimulationEngine
+  -> Systems
+    -> Entities
+```
+
+Avoid:
+
+```txt
+System A directly controlling System B
+```
+
+---
+
+# Development Principles
+
+FocusTown is designed around:
+
+## Emergence
+
+Complex systems should emerge naturally from:
+
+* local interactions
+* simple rules
+* feedback loops
+
+---
+
+## Scalability
+
+Systems should eventually support:
+
+* thousands of citizens
+* large maps
+* multiplayer possibilities
+
+---
+
+## Determinism
+
+Simulation behavior should remain:
+
+* reproducible
+* debuggable
+* predictable
+
+---
+
+# Current Limitations
+
+Current prototype limitations:
+
+* simplistic pathfinding
+* no save system
+* no ECS implementation yet
+* limited optimization
+* no traffic simulation
+* no persistence
+* no desktop tracker yet
+* no real productivity sync yet
+
+---
+
+# Immediate TODOs
+
+# Simulation
+
+* implement A*
+* optimize citizen updates
+* improve traffic
+* improve zoning
+* improve city economy
+
+---
+
+# AI
+
+* improve routines
+* improve emotional simulation
+* add addictions
+* add long-term goals
+* improve social groups
+
+---
+
+# Rendering
+
+* add animations
+* improve sprites
+* optimize rendering
+* add lighting
+
+---
+
+# Productivity Tracker
+
+* create Tauri app
+* detect active windows
+* track focus sessions
+* build analytics dashboard
+
+---
+
+# Productivity Tracker Vision
+
+The future desktop tracker will monitor:
+
+* active applications
+* browser activity
+* idle time
+* multitasking
+* distractions
+* focus sessions
+* behavioral patterns
+
+The tracker will influence:
+
+* citizen morale
+* economy
+* stress
+* burnout
+* city stability
+
+---
+
+# Performance Goals
+
+Long-term targets:
+
+* 1000+ active citizens
+* large maps
+* stable real-time simulation
+* scalable AI systems
+* optimized CPU usage
+
+---
+
+# Planned Save System
+
+Future saves should persist:
+
+* city state
+* citizens
+* memories
+* relationships
+* economy
+* analytics
+* productivity data
 
 ---
 
@@ -564,82 +985,29 @@ Inspired by:
 
 ---
 
-# Goals of the Project
-
-This project is designed to:
-
-* learn advanced software architecture
-* explore simulation systems
-* experiment with emergent AI
-* practice game engine concepts
-* build scalable frontend systems
-* understand autonomous systems
-* explore behavioral analytics
-* model human productivity digitally
-
----
-
-# Long-Term Vision
-
-FocusTown aims to become:
-
-## A Real Productivity Companion
-
-capable of:
-
-* tracking focus
-* detecting procrastination
-* predicting burnout
-* analyzing routines
-* generating behavioral insights
-
----
-
-## A Living Autonomous Society
-
-Where:
-
-* citizens evolve dynamically
-* relationships emerge naturally
-* economies react autonomously
-* stress spreads socially
-* burnout epidemics can appear
-* cultures form organically
-
----
-
-## A Behavioral Mirror
-
-A simulation where:
-
-* your real-world behavior shapes a civilization
-* your productivity affects society
-* your routines influence AI citizens
-* your mental state becomes visible through simulation
-
-The city becomes a reflection of:
-
-* focus
-* discipline
-* habits
-* burnout
-* routines
-* productivity
-* emotional health
-
----
-
 # Roadmap
 
-## Phase 1 — Desktop Productivity Tracker
+## Phase 0 — Implemented (current)
 
-### Desktop App
+- [x] Create Tauri application — [src-tauri/tauri.conf.json](src-tauri/tauri.conf.json#L1)
+- [x] Setup React frontend — [src/app/App.tsx](src/app/App.tsx#L1)
+- [x] Pixi rendering (tile/citizen/building rendering) — [src/rendering/scenes/CityScene.ts](src/rendering/scenes/CityScene.ts#L1)
+- [x] HUD / Statistics panels (population, money, demand) — [src/ui/HUD.tsx](src/ui/HUD.tsx#L1)
+- [x] Basic pathfinding (step-based path generator, not A*) — [src/simulation/systems/PathfindingSystem.ts](src/simulation/systems/PathfindingSystem.ts#L1)
+- [x] Procrastination system & burnout mechanics — [src/simulation/systems/ProcrastinationSystem.ts](src/simulation/systems/ProcrastinationSystem.ts#L1), [src/simulation/systems/EmotionSystem.ts](src/simulation/systems/EmotionSystem.ts#L1)
+- [x] Memory system (short-term memories affecting choices) — [src/simulation/systems/MemorySystem.ts](src/simulation/systems/MemorySystem.ts#L1)
+- [x] Utility AI action scoring — [src/simulation/ai/UtilityAI.ts](src/simulation/ai/UtilityAI.ts#L1)
+- [x] Day/night & weather overlays (lighting) — [src/rendering/scenes/CityScene.ts](src/rendering/scenes/CityScene.ts#L200)
 
-* [ ] Create Tauri application
-* [ ] Setup React frontend
+# Phase 1 — Desktop Productivity Tracker
+
+## Desktop App
+
+* [x] Create Tauri application
+* [x] Setup React frontend
 * [ ] Setup SQLite database
 
-### Activity Monitoring
+## Activity Monitoring
 
 * [ ] Detect active window
 * [ ] Detect application usage
@@ -647,14 +1015,14 @@ The city becomes a reflection of:
 * [ ] Track keyboard activity
 * [ ] Track mouse activity
 
-### Browser Tracking
+## Browser Tracking
 
 * [ ] Website tracking
 * [ ] Domain categorization
 * [ ] Distraction detection
 * [ ] Doomscroll detection
 
-### Data Storage
+## Data Storage
 
 * [ ] Session history
 * [ ] Daily analytics
@@ -663,23 +1031,23 @@ The city becomes a reflection of:
 
 ---
 
-## Phase 2 — Productivity Analytics
+# Phase 2 — Productivity Analytics
 
-### Focus Detection
+## Focus Detection
 
 * [ ] Deep work detection
 * [ ] Alt-tab frequency analysis
 * [ ] Focus session scoring
 * [ ] Context switching detection
 
-### Behavioral Analytics
+## Behavioral Analytics
 
-* [ ] Procrastination score
+* [x] Procrastination score
 * [ ] Burnout prediction
 * [ ] Fatigue estimation
 * [ ] Focus trend analysis
 
-### Visualization
+## Visualization
 
 * [ ] Charts
 * [ ] Productivity timeline
@@ -688,21 +1056,21 @@ The city becomes a reflection of:
 
 ---
 
-## Phase 3 — Real World ↔ Simulation Sync
+# Phase 3 — Real World ↔ Simulation Sync
 
-### Productivity Influence
+## Productivity Influence
 
 * [ ] Real productivity boosts city economy
 * [ ] Focus sessions improve citizen morale
 * [ ] Deep work increases city growth
 
-### Procrastination Influence
+## Procrastination Influence
 
 * [ ] Doomscrolling increases burnout
 * [ ] Distractions reduce productivity
 * [ ] Multitasking affects citizen stress
 
-### Emotional Sync
+## Emotional Sync
 
 * [ ] User fatigue affects citizens
 * [ ] User focus affects AI behavior
@@ -710,34 +1078,34 @@ The city becomes a reflection of:
 
 ---
 
-## Phase 4 — Advanced City Simulation
+# Phase 4 — Advanced City Simulation
 
-### Traffic
+## Traffic
 
 * [ ] Advanced pathfinding (A*)
 * [ ] Traffic congestion
 * [ ] Road hierarchy
 * [ ] Intersections
 
-### Infrastructure
+## Infrastructure
 
 * [ ] Electricity
 * [ ] Water systems
 * [ ] Garbage collection
 * [ ] Public transport
 
-### Environment
+## Environment
 
 * [ ] Pollution
 * [ ] Noise
-* [ ] Weather expansion
 * [ ] Seasons
+* [ ] Weather expansion
 
 ---
 
-## Phase 5 — Advanced Society Simulation
+# Phase 5 — Advanced Society Simulation
 
-### Families
+## Families
 
 * [ ] Couples
 * [ ] Marriage
@@ -745,14 +1113,14 @@ The city becomes a reflection of:
 * [ ] Aging
 * [ ] Death
 
-### Social Structures
+## Social Structures
 
-* [ ] Friend groups
 * [ ] Communities
+* [ ] Friend groups
 * [ ] Workplace culture
 * [ ] Neighborhood identity
 
-### Crime
+## Crime
 
 * [ ] Criminal behavior
 * [ ] Police
@@ -761,16 +1129,16 @@ The city becomes a reflection of:
 
 ---
 
-## Phase 6 — Advanced Psychology
+# Phase 6 — Advanced Psychology
 
-### Mental Systems
+## Mental Systems
 
 * [ ] Depression
 * [ ] Anxiety disorders
-* [ ] Addiction simulation
 * [ ] Attention span
+* [ ] Addiction simulation
 
-### Productivity Systems
+## Productivity Systems
 
 * [ ] Dopamine simulation
 * [ ] Digital distraction mechanics
@@ -779,52 +1147,52 @@ The city becomes a reflection of:
 
 ---
 
-## Phase 7 — AI & Emergent Behavior
+# Phase 7 — AI & Emergent Behavior
 
-### Advanced AI
+## Advanced AI
 
 * [ ] Long-term goals
 * [ ] Dynamic personalities
 * [ ] Life ambitions
-* [ ] Decision memories
+* [x] Decision memories
 
-### Emergence
+## Emergence
 
 * [ ] Economic crises
-* [ ] Social collapse
 * [ ] Burnout epidemics
+* [ ] Social collapse
 * [ ] Productivity booms
 
 ---
 
-## Phase 8 — Visual & UX Improvements
+# Phase 8 — Visual & UX Improvements
 
-### Graphics
+## Graphics
 
 * [ ] Sprites
 * [ ] Animations
-* [ ] Lighting
+* [x] Lighting
 * [ ] Particle effects
 
-### UI
+## UI
 
 * [ ] Modern HUD
 * [ ] Minimap
-* [ ] Statistics panels
+* [x] Statistics panels
 * [ ] Productivity dashboards
 
 ---
 
-## Phase 9 — Save & Persistence
+# Phase 9 — Save & Persistence
 
-### Saves
+## Saves
 
 * [ ] Save system
 * [ ] Autosave
 * [ ] Persistent citizens
 * [ ] Persistent analytics
 
-### Cloud
+## Cloud
 
 * [ ] Sync
 * [ ] Online backup
@@ -832,16 +1200,16 @@ The city becomes a reflection of:
 
 ---
 
-## Phase 10 — Machine Learning
+# Phase 10 — Machine Learning
 
-### AI Predictions
+## AI Predictions
 
 * [ ] Predict procrastination
 * [ ] Predict burnout
 * [ ] Predict focus windows
 * [ ] Smart recommendations
 
-### Adaptive Systems
+## Adaptive Systems
 
 * [ ] Personalized productivity coaching
 * [ ] Intelligent interventions
@@ -849,13 +1217,13 @@ The city becomes a reflection of:
 
 ---
 
-# Final Goal
+# Final Vision
 
 A living simulation where:
 
-* your real-world behavior shapes a virtual civilization
+* your real-world behavior shapes a civilization
 * your productivity affects economy and society
 * your habits influence autonomous AI citizens
 * your stress and focus become visible through simulation
 
-FocusTown aims to transform productivity and behavioral analytics into a living autonomous world.
+FocusTown aims to transform productivity, behavioral analytics, and emergent AI into a living autonomous digital world.
