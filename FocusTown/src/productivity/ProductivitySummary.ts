@@ -1,6 +1,7 @@
 import {ProductivityEvent, ProductivitySummary} from "./types"
 
 export function summarizeProductivityEvent(events: ProductivityEvent[]): ProductivitySummary {
+    // The summary is derived data. Keeping it pure makes it easy to replace storage later.
     const summary: ProductivitySummary = {
         focusSeconds: 0,
         distractionSeconds: 0,
@@ -17,6 +18,7 @@ export function summarizeProductivityEvent(events: ProductivityEvent[]): Product
     let scoreTotal = 0
 
     events.forEach(event => {
+        // Each event contributes duration to exactly one activity bucket.
         summary.totalTrackedSeconds += event.durationSeconds
         scoreTotal += event.productivityScore
 

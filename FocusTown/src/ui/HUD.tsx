@@ -8,6 +8,7 @@ type Props = {
   }
   
   export function HUD({simulationState, selectedCitizen, selectedBuilding, buildMode}: Props) {
+    // Debug view: shows why the selected citizen picked its current action.
     const bestFriend =[...(selectedCitizen?.relationships ?? [])].sort((a:any, b:any) =>b.friendship -a.friendship)[0];
     const actionScores = selectedCitizen ? getActionScores(selectedCitizen) : [];
     return (
@@ -212,6 +213,27 @@ type Props = {
         </div>
         <div>
           Score:{" "} {(simulationState.productivitySummary?.averageProductivityScore ?? 0).toFixed(0)}
+        </div>
+        {/* Per-tick impact confirms that productivity data is actively affecting the city. */}
+        <h3>Productivity Impact</h3>
+        <div>
+          Money / tick: {(simulationState.productivityImpact?.cityMoneyDelta ?? 0).toFixed(2)}
+        </div>
+
+        <div>
+          Mood / tick: {(simulationState.productivityImpact?.moodDelta ?? 0).toFixed(2)}
+        </div>
+
+        <div>
+          Motivation / tick: {(simulationState.productivityImpact?.motivationDelta ?? 0).toFixed(2)}
+        </div>
+
+        <div>
+          Stress / tick: {(simulationState.productivityImpact?.stressDelta ?? 0).toFixed(2)}
+        </div>
+
+        <div>
+          Burnout / tick: {(simulationState.productivityImpact?.burnoutDelta ?? 0).toFixed(2)}
         </div>
       </div>
     )

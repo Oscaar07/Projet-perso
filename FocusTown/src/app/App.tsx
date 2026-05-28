@@ -8,9 +8,20 @@ import { CityScene } from "../rendering/scenes/CityScene"
 import { TILE_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from "../simulation/config/worldConfig"
 import { HUD } from "../ui/HUD"
 import { Weather } from "../simulation/world/Weather"
-import { ProductivitySummary } from "../productivity/types"
+import { ProductivitySummary, ProductivityEvent } from "../productivity/types"
+import { summarizeProductivityEvent } from "../productivity/ProductivitySummary"
 
 const engine = new SimulationEngine()
+const PRODUCTIVITY_EVENTS_STORAGE_KEY = "focusTown.productivityEvents"
+
+const EMPTY_PRODUCTIVITY_SUMMARY: ProductivitySummary = {
+  focusSeconds: 0,
+  distractionSeconds: 0,
+  idleSeconds: 0,
+  breakSeconds: 0,
+  totalTrackedSeconds: 0,
+  averageProductivityScore: 0,
+}
 
 function App() {
   const [simulationState, setSimulationState] = useState<{
@@ -47,19 +58,52 @@ function App() {
   const [buildMode, setBuildMode] = useState<"house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null>(null)
   const buildModeRef = useRef<"house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null>(null)
 
-  const [productivitySummary, setProductivitySummary] = useState<ProductivitySummary>({
-    focusSeconds: 0,
-    distractionSeconds: 0,
-    idleSeconds: 0,
-    breakSeconds: 0,
-    totalTrackedSeconds: 0,
-    averageProductivityScore: 0,
-  })
+  const [productivitySummary, setProductivitySummary] = useState<ProductivitySummary>(EMPTY_PRODUCTIVITY_SUMMARY)
+
+  const [activeFocusStartedAt, setActiveFocusStartedAt] = useState<number | null>(null)
+  const [productivityEvents, setProductivityEvents] = useState<ProductivityEvent[]>([])
+  const [productivityLoaded, setProductivityLoaded] = useState(false)
 
   function applyProductivitySummary(nextSummary: typeof productivitySummary) {
-  setProductivitySummary(nextSummary)
-  engine.setProductivitySummary(nextSummary)
-  setSimulationState(engine.getState())
+    setProductivitySummary(nextSummary)
+    engine.setProductivitySummary(nextSummary)
+    setSimulationState(engine.getState())
+  }
+
+  function startFocusSession() {
+    setActiveFocusStartedAt(Date.now())
+  }
+
+  function stopFocusSession() {
+    if (!activeFocusStartedAt) return
+
+    const endedAt = Date.now()
+    const durationSeconds = Math.floor((endedAt - activeFocusStartedAt) / 1000)
+
+    addProductivityEvent({
+      id: crypto.randomUUID(),
+      type: "focus",
+      startedAt: activeFocusStartedAt,
+      endedAt,
+      durationSeconds,
+      appName: "Manual Focus",
+      productivityScore: 90,
+    })
+    setActiveFocusStartedAt(null)
+  }
+
+  function addProductivityEvent(event: ProductivityEvent) {
+    // Events are the source of truth; the summary is recalculated from them.
+    const nextEvents = [...productivityEvents, event]
+    const nextSummary = summarizeProductivityEvent(nextEvents)
+
+    setProductivityEvents(nextEvents)
+    applyProductivitySummary(nextSummary)
+  }
+
+  function clearProductivity() {
+    setProductivityEvents([])
+    applyProductivitySummary(EMPTY_PRODUCTIVITY_SUMMARY)
   }
 
   useEffect(() => {
@@ -194,6 +238,33 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const rawEvent = localStorage.getItem(PRODUCTIVITY_EVENTS_STORAGE_KEY)
+    if (!rawEvent) {
+      setProductivityLoaded(true)
+      return
+    }
+
+    try {
+      const savedEvents = JSON.parse(rawEvent) as ProductivityEvent[]
+      const savedSummary = summarizeProductivityEvent(savedEvents)
+
+      setProductivityEvents(savedEvents)
+      applyProductivitySummary(savedSummary)
+    } catch (error) {
+      console.error("Failed to load productivity events", error)
+    } finally {
+      setProductivityLoaded(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!productivityLoaded) return
+
+    // Temporary browser persistence until the Tauri/SQLite storage layer exists.
+    localStorage.setItem(PRODUCTIVITY_EVENTS_STORAGE_KEY, JSON.stringify(productivityEvents))
+  }, [productivityEvents, productivityLoaded])
+
   return (
     <>
       <div
@@ -225,37 +296,37 @@ function App() {
         <button onClick={() => setBuildMode(null)}>
           Cancel
         </button>
-
-        <button onClick={() => applyProductivitySummary({
-          focusSeconds: 1800,
-          distractionSeconds: 0,
-          idleSeconds: 0,
-          breakSeconds: 0,
-          totalTrackedSeconds: 1800,
-          averageProductivityScore: 90,
+        <button onClick={() => addProductivityEvent({
+          id: crypto.randomUUID(),
+          type: "distraction",
+          startedAt: Date.now() - 300000,
+          endedAt: Date.now(),
+          durationSeconds: 300,
+          appName: "Simulated Distraction",
+          productivityScore: 20,
         })}>
-          Simulate Focus
+          Log Distraction
         </button>
-        <button onClick={() => applyProductivitySummary({
-          focusSeconds: 0,
-          distractionSeconds: 1800,
-          idleSeconds: 0,
-          breakSeconds: 0,
-          totalTrackedSeconds: 1800,
-          averageProductivityScore: 20,
-        })}>
-          Simulate Distraction
-        </button>
-        <button onClick={() => applyProductivitySummary({
-          focusSeconds: 0,
-          distractionSeconds: 0,
-          idleSeconds: 0,
-          breakSeconds: 0,
-          totalTrackedSeconds: 0,
-          averageProductivityScore: 0,
-        })}>
+        <button onClick={clearProductivity}>
           Clear Productivity
         </button>
+        {activeFocusStartedAt && (
+          <span>
+            Focus session running
+          </span>
+        )}
+          <span>
+            Events: {productivityEvents.length}
+          </span>
+        {activeFocusStartedAt ? (
+          <button onClick={stopFocusSession}>
+            Stop Focus
+          </button>
+        ) : (
+          <button onClick={startFocusSession}>
+            Start Focus
+          </button>
+        )}
       </div>
 
       <div ref={containerRef} />

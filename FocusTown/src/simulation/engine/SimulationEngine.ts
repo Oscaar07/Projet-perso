@@ -69,6 +69,13 @@ export class SimulationEngine {
   private constructionSystem = new ConstructionSystem()
   private locationEffectSystem = new LocationEffectSystem()
   private worldGenerator = new WorldGenerator()
+  private productivityImpact = { 
+    cityMoneyDelta: 0,
+    moodDelta: 0,
+    motivationDelta: 0,
+    stressDelta: 0,
+    burnoutDelta: 0,
+  }
 
   constructor() {
     this.tiles = this.worldGenerator.generate();
@@ -99,6 +106,7 @@ export class SimulationEngine {
   tick() {
     this.tickCount++
 
+    // The engine owns simulation time; React only reads the resulting state.
     const timeState = this.timeSystem.update({time: this.time, day: this.day, weather: this.weather})
     this.time = timeState.time
     this.day = timeState.day
@@ -123,7 +131,9 @@ export class SimulationEngine {
     this.needsSystem.update(this.citizens, this.weather)
     this.emotionSystem.update(this.citizens)
 
+    // Real or manual productivity data flows into the city through this bridge.
     const productivityEffect = this.productivityInfluenceSystem.update(this.citizens, this.productivitySummary)
+    this.productivityImpact = productivityEffect
     this.cityMoney += productivityEffect.cityMoneyDelta
 
     this.healthSystem.update(this.citizens)
@@ -157,6 +167,7 @@ export class SimulationEngine {
         cityMoney: this.cityMoney,
         residentialDemand: this.residentialDemand,
         productivitySummary: this.productivitySummary,
+        productivityImpact: this.productivityImpact,
     }
   }
   
@@ -184,10 +195,12 @@ export class SimulationEngine {
       cityMoney: this.cityMoney,
       residentialDemand: this.residentialDemand,
       productivitySummary: this.productivitySummary,
+      productivityImpact: this.productivityImpact,
     }
   }
 
   addBuilding(type: BuildingType, x: number, y: number) {
+    // Public UI command: the engine keeps the API stable and delegates construction rules.
     const state = this.constructionSystem.addBuilding({
       type,
       x,
@@ -203,6 +216,7 @@ export class SimulationEngine {
   }
 
   addRoad(x: number, y: number) {
+    // Roads are tiles, not buildings, but the construction system owns both edits.
     const state = this.constructionSystem.addRoad({
       x,
       y,
@@ -217,6 +231,7 @@ export class SimulationEngine {
   }
 
   addZone(type: "residential" | "commercial", x: number, y: number) {
+    // Zones mark tiles and may later auto-generate buildings during ticks.
     const state = this.constructionSystem.addZone({
       type,
       x,
