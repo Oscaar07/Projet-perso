@@ -14,6 +14,7 @@ import { summarizeProductivityEvent } from "../productivity/ProductivitySummary"
 const engine = new SimulationEngine()
 const PRODUCTIVITY_EVENTS_STORAGE_KEY = "focusTown.productivityEvents"
 
+// Single in-memory summary used by the HUD and by the simulation engine.
 const EMPTY_PRODUCTIVITY_SUMMARY: ProductivitySummary = {
   focusSeconds: 0,
   distractionSeconds: 0,
@@ -65,6 +66,7 @@ function App() {
   const [productivityLoaded, setProductivityLoaded] = useState(false)
 
   function applyProductivitySummary(nextSummary: typeof productivitySummary) {
+    // Keep React state and the simulation engine in sync from one update path.
     setProductivitySummary(nextSummary)
     engine.setProductivitySummary(nextSummary)
     setSimulationState(engine.getState())
@@ -113,6 +115,7 @@ function App() {
 
   useEffect(() => {
     const interval = setInterval(() => {
+      // The engine owns the simulation clock; the UI only renders snapshots.
       const state = engine.tick()
 
       setSimulationState(state)
@@ -127,6 +130,7 @@ function App() {
     initializedRef.current = true
 
     async function initPixi() {
+      // PIXI renders the city scene into a single canvas managed by React.
       const app = new Application()
 
       await app.init({
@@ -138,6 +142,7 @@ function App() {
       appRef.current = app
 
 
+      // CityScene is the rendering bridge between simulation state and user input.
       citySceneRef.current = new CityScene(app,
 
             (citizen) => {setSelectedCitizen(citizen)},
@@ -177,6 +182,7 @@ function App() {
   }, [])
 
   useEffect(() => {
+    // Re-render from the latest simulation snapshot after each engine tick.
     citySceneRef.current?.render(
       simulationState.citizens,
       simulationState.buildings,
@@ -227,6 +233,7 @@ function App() {
 
       event.preventDefault()
 
+      // Clamp zoom so the camera stays usable on all screen sizes.
       const delta = event.deltaY > 0 ? -0.1 : 0.1;
 
       citySceneRef.current.setZoom(Math.max(0.5,Math.min(3,citySceneRef.current.getZoom()  + delta)));
@@ -239,6 +246,7 @@ function App() {
   }, [])
 
   useEffect(() => {
+    // Persist user productivity history locally so the HUD survives reloads.
     const rawEvent = localStorage.getItem(PRODUCTIVITY_EVENTS_STORAGE_KEY)
     if (!rawEvent) {
       setProductivityLoaded(true)

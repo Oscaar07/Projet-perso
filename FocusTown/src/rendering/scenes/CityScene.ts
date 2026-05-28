@@ -28,6 +28,7 @@ export class CityScene {
     this.onCitizenClick = onCitizenClick  
     this.onBuildingClick = onBuildingClick
     this.onTileClick = onTileClick
+    // The stage captures pointer input once and forwards it to the current build mode.
     this.app.stage.eventMode = "static"
     this.app.stage.hitArea = this.app.screen
     this.app.stage.on("pointerdown", () => {
@@ -107,6 +108,7 @@ export class CityScene {
   ) {
     this.worldContainer.removeChildren()
     
+    // Draw background first, then interactive entities, then overlays and previews.
     this.drawGrid()
 
     tiles.forEach((tile) =>{
@@ -221,6 +223,7 @@ export class CityScene {
       this.worldContainer.addChild(graphics)
     })
     
+    // Time-of-day tint sits above the base map but below selection feedback.
     const overlay = new Graphics()
     overlay.eventMode = "none"
 
@@ -236,6 +239,7 @@ export class CityScene {
     }
     this.worldContainer.addChild(overlay)
 
+    // Weather is visually layered after the time tint so it remains readable.
     const weatherOverlay = new Graphics();
     weatherOverlay.eventMode = "none"
     weatherOverlay.rect(0, 0, WORLD_WIDTH * TILE_SIZE, WORLD_HEIGHT * TILE_SIZE)
@@ -250,6 +254,7 @@ export class CityScene {
     }
     this.worldContainer.addChild(weatherOverlay)
 
+    // Hover feedback is always on top of the world so build targeting stays obvious.
     const hoverHighlight = new Graphics()
     hoverHighlight.eventMode = "none"
     hoverHighlight.rect(this.hoverTileX * TILE_SIZE, this.hoverTileY * TILE_SIZE, TILE_SIZE, TILE_SIZE)

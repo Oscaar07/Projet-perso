@@ -4,6 +4,7 @@ export class BuildingGenerator {
     generate() {
         const buildings: Building[] = [];
 
+        // Repeat a compact house/office/restaurant pattern to bootstrap the first city block.
         for (let x = 2; x < 25; x += 4) {
             buildings.push({
                 id: crypto.randomUUID(),

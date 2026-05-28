@@ -8,7 +8,7 @@ type Props = {
   }
   
   export function HUD({simulationState, selectedCitizen, selectedBuilding, buildMode}: Props) {
-    // Debug view: shows why the selected citizen picked its current action.
+    // Debug view: surfaces the simulation state that matters most to gameplay balancing.
     const bestFriend =[...(selectedCitizen?.relationships ?? [])].sort((a:any, b:any) =>b.friendship -a.friendship)[0];
     const actionScores = selectedCitizen ? getActionScores(selectedCitizen) : [];
     return (

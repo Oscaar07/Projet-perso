@@ -78,6 +78,7 @@ export class SimulationEngine {
   }
 
   constructor() {
+    // Build the initial world once, then spawn citizens from the generated map.
     this.tiles = this.worldGenerator.generate();
     this.buildings = this.buildingGenerator.generate();
     const houses = this.buildings.filter((b)=>b.type === "house");
@@ -120,6 +121,7 @@ export class SimulationEngine {
       this.residentialDemand = 100
     }
     
+    // Systems are run in dependency order: cognition first, movement later, then outcomes.
     this.memorySystem.update(this.citizens, this.tickCount)
     this.scheduleSystem.update(this.citizens, this.time)
     this.actionTargetSystem.update(this.citizens)
@@ -143,6 +145,7 @@ export class SimulationEngine {
     this.jobSystem.update(this.citizens)
     this.populationSystem.update(this.citizens, this.buildings, this.populationCap, this.residentialDemand)
 
+    // Construction can mutate both tiles and buildings, so it runs before finance closes the tick.
     const constructionState = this.constructionSystem.autoBuildZones({ tiles: this.tiles, buildings: this.buildings, cityMoney: this.cityMoney })
     this.buildings = constructionState.buildings
     this.tiles = constructionState.tiles
@@ -172,6 +175,7 @@ export class SimulationEngine {
   }
   
   getTimeOfDay() {
+    // Keep time-of-day coarse so rendering and AI can branch cheaply.
     if(this.time >= 6 && this.time < 12)
       return "morning"
     else if(this.time >= 12 && this.time < 18)
@@ -183,6 +187,7 @@ export class SimulationEngine {
   }
 
   getState() {
+    // Snapshot method for UI consumers that should not mutate the engine directly.
     return {
       tick: this.tickCount,
       citizens: this.citizens,
@@ -247,6 +252,7 @@ export class SimulationEngine {
   }
 
   setProductivitySummary(summary: ProductivitySummary) {
+    // External productivity tracking feeds back into the simulation through this setter.
     this.productivitySummary = summary
   }
 }
