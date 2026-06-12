@@ -1,16 +1,15 @@
 import {getActionScores} from "../simulation/ai/debugActionScores"
+import { useSimulationStore } from "../store/simulationStore"
+import { useUIStore } from "../store/uiStore"
 
-type Props = {
-    simulationState: any
-    selectedCitizen: any
-    selectedBuilding: any
-    buildMode: "house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null
-  }
-  
-  export function HUD({simulationState, selectedCitizen, selectedBuilding, buildMode}: Props) {
+  export function HUD() {
     // Debug view: surfaces the simulation state that matters most to gameplay balancing.
-    const bestFriend =[...(selectedCitizen?.relationships ?? [])].sort((a:any, b:any) =>b.friendship -a.friendship)[0];
+    const simulationState = useSimulationStore()
+    const { selectedCitizen, selectedBuilding, buildMode } = useUIStore()
+    const bestFriend = selectedCitizen ? [...(selectedCitizen.relationships 
+      ?? [])].sort((a, b) => b.friendship - a.friendship)[0] : null
     const actionScores = selectedCitizen ? getActionScores(selectedCitizen) : [];
+    
     return (
       <div
         style={{

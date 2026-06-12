@@ -5,6 +5,7 @@ import { Tile } from "../world/Tiles"
 import { NeedsSystem } from "../systems/NeedsSystem"
 import { EconomySystem } from "../systems/EconomySystem"
 import { PathfindingSystem } from "../systems/PathfindingSystem"
+import { PathfindingGrid } from "../systems/PathfindingGrid"
 import { BuildingGenerator } from "../world/BuildingGenerator"
 import { SocialSystem } from "../systems/SocialSystem"
 import { JobSystem } from "../systems/JobSystem"
@@ -39,6 +40,7 @@ export class SimulationEngine {
   private needsSystem = new NeedsSystem()
   private economySystem = new EconomySystem()
   private pathfindingSystem = new PathfindingSystem()
+  private pathfindingGrid = new PathfindingGrid()
   private buildingGenerator = new BuildingGenerator()
   private socialSystem = new SocialSystem()
   private jobSystem = new JobSystem()
@@ -127,8 +129,8 @@ export class SimulationEngine {
     this.actionTargetSystem.update(this.citizens)
     this.habitSystem.update(this.citizens)
     this.procrastinationSystem.update(this.citizens)
-    this.pathfindingSystem.update(this.citizens, this.tiles)
-    this.movementSystem.update(this.citizens)
+    this.pathfindingSystem.update(this.citizens, this.pathfindingGrid)
+    this.movementSystem.update(this.citizens, this.pathfindingGrid)
     this.locationEffectSystem.update(this.citizens)
     this.needsSystem.update(this.citizens, this.weather)
     this.emotionSystem.update(this.citizens)
@@ -150,7 +152,7 @@ export class SimulationEngine {
     this.buildings = constructionState.buildings
     this.tiles = constructionState.tiles
     this.cityMoney = constructionState.cityMoney
-
+    this.pathfindingGrid.rebuild(this.tiles, this.buildings)
     const fianceState = this.cityFinanceSystem.update({ citizens: this.citizens, buildings: this.buildings, cityMoney: this.cityMoney })
     this.cityMoney = fianceState.cityMoney
 
@@ -218,6 +220,7 @@ export class SimulationEngine {
     this.buildings = state.buildings
     this.tiles = state.tiles
     this.cityMoney = state.cityMoney
+    this.pathfindingGrid.rebuild(this.tiles, this.buildings)
   }
 
   addRoad(x: number, y: number) {
@@ -233,6 +236,7 @@ export class SimulationEngine {
     this.buildings = state.buildings
     this.tiles = state.tiles
     this.cityMoney = state.cityMoney
+    this.pathfindingGrid.rebuild(this.tiles, this.buildings)    
   }
 
   addZone(type: "residential" | "commercial", x: number, y: number) {

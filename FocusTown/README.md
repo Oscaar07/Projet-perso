@@ -424,22 +424,40 @@ FocusTown follows a modular architecture inspired by:
 
 ```txt
 src/
-├── simulation/
-│   ├── ai/
-│   ├── engine/
-│   ├── entities/
-│   ├── systems/
-│   ├── world/
-│   └── config/
+├── simulation/         # Simulation engine, systems, entities
+│   ├── ai/             # Utility AI, scoring, memory
+│   ├── engine/         # Tick loop, system orchestration
+│   ├── entities/       # Citizens, buildings, tiles
+│   ├── systems/        # 20+ independent simulation systems
+│   ├── world/          # World generation, weather, zoning
+│   └── config/         # Global constants
 │
-├── rendering/
-│   └── scenes/
+├── rendering/          # PixiJS visual layer
+│   └── scenes/         # CityScene — tile, citizen, building rendering
 │
-├── ui/
-│
-├── app/
-│
-└── shared/
+├── store/              # Zustand stores (simulation, UI, productivity)
+├── productivity/       # Types, summaries, localStorage persistence
+├── tracking/           # Tauri event listeners (active window tracking)
+├── ui/                 # React components (HUD, dashboards)
+├── app/                # Application entry point (App.tsx)
+├── database/           # (future SQLite)
+├── components/         # (future shared components)
+├── hooks/              # (future custom hooks)
+├── services/           # (future service layer)
+├── types/              # (future shared types)
+├── utils/              # (future utilities)
+├── pages/              # (future routing)
+└── styles/             # (future global styles)
+
+src-tauri/
+└── src/
+    ├── commands/       # Tauri IPC commands (start_tracking, etc.)
+    ├── tracking/       # Windows API active window detection
+    ├── database/       # (future SQLite)
+    ├── system/         # (future system-level features)
+    ├── utils/          # (future utilities)
+    ├── lib.rs          # Tauri app builder
+    └── main.rs         # Windows entry point
 ```
 
 ---
@@ -604,13 +622,9 @@ Handles:
 
 Current:
 
-* simple tile-based pathfinding
-
-Planned:
-
-* A*
-* traffic-aware routing
-* road optimization
+* A* pathfinding with traffic-aware routing
+* occupancy-based traffic penalty system
+* shortest-path optimization via movementCost heuristics
 
 ---
 
@@ -708,23 +722,15 @@ Benefits:
 
 ## Frontend
 
-* React
+* React + Zustand (state management)
 * TypeScript
-* PixiJS
+* PixiJS v8 (WebGPU/WebGL rendering)
 * Vite
 
----
+## Desktop
 
-## Desktop App (Planned)
-
-Planned:
-
-* Tauri
-* Rust
-
-Alternative:
-
-* Electron
+* Tauri v2 (Rust backend)
+* Windows API (active window detection via `windows` crate)
 
 ---
 
@@ -796,10 +802,9 @@ npm run preview
 
 ---
 
-# Planned Desktop Build
+# Desktop Build
 
 ```bash
-npm install -D @tauri-apps/cli
 npm run tauri dev
 ```
 
@@ -873,14 +878,11 @@ Simulation behavior should remain:
 
 Current prototype limitations:
 
-* simplistic pathfinding
-* no save system
+* no save system (localStorage only for productivity events)
 * no ECS implementation yet
-* limited optimization
-* no traffic simulation
-* no persistence
-* no desktop tracker yet
-* no real productivity sync yet
+* limited optimization for 1000+ citizens
+* no persistence for simulation state
+* no real productivity sync yet (manual buttons + active window polling)
 
 ---
 
@@ -888,11 +890,9 @@ Current prototype limitations:
 
 # Simulation
 
-* implement A*
-* optimize citizen updates
-* improve traffic
-* improve zoning
-* improve city economy
+* optimize citizen updates for 1000+ targets
+* improve zoning auto-construction
+* improve city economy balancing
 
 ---
 
@@ -911,16 +911,16 @@ Current prototype limitations:
 * add animations
 * improve sprites
 * optimize rendering
-* add lighting
 
 ---
 
 # Productivity Tracker
 
-* create Tauri app
-* detect active windows
-* track focus sessions
-* build analytics dashboard
+* [x] create Tauri app
+* [x] detect active windows (Rust polling every 5s)
+* [x] build analytics dashboard
+* [ ] track browser websites
+* [ ] track idle time
 
 ---
 
@@ -993,7 +993,7 @@ Inspired by:
 - [x] Setup React frontend — [src/app/App.tsx](src/app/App.tsx#L1)
 - [x] Pixi rendering (tile/citizen/building rendering) — [src/rendering/scenes/CityScene.ts](src/rendering/scenes/CityScene.ts#L1)
 - [x] HUD / Statistics panels (population, money, demand) — [src/ui/HUD.tsx](src/ui/HUD.tsx#L1)
-- [x] Basic pathfinding (step-based path generator, not A*) — [src/simulation/systems/PathfindingSystem.ts](src/simulation/systems/PathfindingSystem.ts#L1)
+- [x] A* pathfinding with traffic-aware routing — [src/simulation/systems/PathfindingSystem.ts](src/simulation/systems/PathfindingSystem.ts#L1)
 - [x] Procrastination system & burnout mechanics — [src/simulation/systems/ProcrastinationSystem.ts](src/simulation/systems/ProcrastinationSystem.ts#L1), [src/simulation/systems/EmotionSystem.ts](src/simulation/systems/EmotionSystem.ts#L1)
 - [x] Memory system (short-term memories affecting choices) — [src/simulation/systems/MemorySystem.ts](src/simulation/systems/MemorySystem.ts#L1)
 - [x] Utility AI action scoring — [src/simulation/ai/UtilityAI.ts](src/simulation/ai/UtilityAI.ts#L1)
@@ -1009,8 +1009,8 @@ Inspired by:
 
 ## Activity Monitoring
 
-* [ ] Detect active window
-* [ ] Detect application usage
+* [x] Detect active window (Rust polling via Windows API)
+* [x] Detect application usage (process name + window title)
 * [ ] Track idle time
 * [ ] Track keyboard activity
 * [ ] Track mouse activity
@@ -1082,8 +1082,8 @@ Inspired by:
 
 ## Traffic
 
-* [ ] Advanced pathfinding (A*)
-* [ ] Traffic congestion
+* [x] Advanced pathfinding (A*)
+* [x] Traffic congestion (occupancy-based penalty system)
 * [ ] Road hierarchy
 * [ ] Intersections
 
