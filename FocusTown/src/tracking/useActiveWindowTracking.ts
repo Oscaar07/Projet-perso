@@ -6,6 +6,7 @@ export type TrackingEventPayload = {
   title: string
   processName: string
   eventType: "focus" | "distraction" | "idle" | "break" | "unknown"
+  domain?: string
   timestamp: number
 }
 
@@ -30,6 +31,7 @@ export function useActiveWindowTracking(
             durationSeconds: Math.floor((now - sessionStart) / 1000),
             appName: previousEvent.processName,
             windowTitle: previousEvent.title,
+            domain: previousEvent.domain,
             productivityScore:
               previousEvent.eventType === "focus" ? 90 :
               previousEvent.eventType === "break" ? 70 :

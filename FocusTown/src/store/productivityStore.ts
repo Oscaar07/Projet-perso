@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { ProductivityEvent, ProductivitySummary } from "../productivity/types"
 import { summarizeProductivityEvent } from "../productivity/ProductivitySummary"
+import { saveProductivityEvent } from "../productivity/ProductivityStorage"
 import { engine } from "./simulationStore"
 
 const EMPTY_SUMMARY: ProductivitySummary = {
@@ -13,7 +14,9 @@ type ProductivityState = {
   summary: ProductivitySummary
   activeFocusStartedAt: number | null
   loaded: boolean
+  pendingBuffer: ProductivityEvent[]
   addEvent: (event: ProductivityEvent) => void
+  setEvents: (events: ProductivityEvent[]) => void
   clearAll: () => void
   startFocus: () => void
   stopFocus: () => void
@@ -24,12 +27,33 @@ export const useProductivityStore = create<ProductivityState>((set, get) => ({
   summary: { ...EMPTY_SUMMARY },
   activeFocusStartedAt: null,
   loaded: false,
+  pendingBuffer:[],
 
-  addEvent: (event) => {
-    const nextEvents = [...get().events, event]
-    const nextSummary = summarizeProductivityEvent(nextEvents)
-    engine.setProductivitySummary(nextSummary)
-    set({ events: nextEvents, summary: nextSummary })
+addEvent: async (event) => {
+  // Bufferiser les events reçus avant le chargement SQLite
+  if (!get().loaded) {
+    set({ pendingBuffer: [...get().pendingBuffer, event] })
+    return
+  }
+  const nextEvents = [...get().events, event]
+  const nextSummary = summarizeProductivityEvent(nextEvents)
+  engine.setProductivitySummary(nextSummary)
+  set({ events: nextEvents, summary: nextSummary })
+  await saveProductivityEvent(event)
+},
+
+  setEvents: (events) => {
+    const summary = summarizeProductivityEvent(events)
+    engine.setProductivitySummary(summary)
+    set({ events, summary })
+    // Rejouer les events bufferisés pendant le chargement
+    const pending = get().pendingBuffer
+    if (pending.length > 0) {
+      set({ pendingBuffer: [] })
+      for (const e of pending) {
+        get().addEvent(e)
+      }
+    }
   },
 
   clearAll: () => {

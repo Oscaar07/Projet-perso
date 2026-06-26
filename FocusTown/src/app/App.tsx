@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 import { Application } from "pixi.js"
-import { useSimulationStore, engine, tickSimulation } from "../store/simulationStore"
+import { useSimulationStore, engine, tickSimulation, startSimulation, stopSimulation } from "../store/simulationStore"
 import { useUIStore } from "../store/uiStore"
 import { useProductivityStore } from "../store/productivityStore"
 import { CityScene } from "../rendering/scenes/CityScene"
@@ -10,11 +10,11 @@ import { ProductivityDashboard } from "../ui/ProductivityDashboard"
 import { useActiveWindowTracking } from "../tracking/useActiveWindowTracking"
 import { invoke } from "@tauri-apps/api/core"
 import { ProductivityEvent } from "../productivity/types"
-import { loadProductivityEvents, saveProductivityEvents } from "../productivity/ProductivityStorage"
+import { loadProductivityEvents } from "../productivity/ProductivityStorage"
 
 function App() {
   const sim = useSimulationStore()
-  const { buildMode, selectedBuilding, selectedCitizen, setBuildMode, setSelectedCitizen, setSelectedBuilding } = useUIStore()
+  const { selectedBuilding, selectedCitizen, setBuildMode, setSelectedCitizen, setSelectedBuilding } = useUIStore()
   const { events, activeFocusStartedAt, addEvent, clearAll, startFocus, stopFocus } = useProductivityStore()
 
   const appRef = useRef<Application | null>(null)
@@ -23,8 +23,8 @@ function App() {
   const initializedRef = useRef(false)
 
   useEffect(() => {
-    const interval = setInterval(tickSimulation, 100)
-    return () => clearInterval(interval)
+    startSimulation()
+    return () => stopSimulation()
   }, [])
 
   useEffect(() => {
@@ -76,10 +76,21 @@ function App() {
   }, [])
 
   useEffect(() => {
-    citySceneRef.current?.render(
+    const scene = citySceneRef.current
+    if (!scene) return
+
+    if (engine.tilesChanged) {
+      scene.updateTiles(sim.tiles)
+      engine.tilesChanged = false
+    }
+    if (engine.buildingsChanged) {
+      scene.updateBuildings(sim.buildings, selectedBuilding?.id)
+      engine.buildingsChanged = false
+    }
+    scene.render(
       sim.citizens, sim.buildings, sim.tiles,
       sim.timeOfDay, sim.weather,
-      selectedBuilding?.id, selectedCitizen?.id, buildMode
+      selectedCitizen?.id,
     )
   }, [sim])
 
@@ -107,32 +118,21 @@ function App() {
     return () => window.removeEventListener("wheel", handleWheel)
   }, [])
 
-  // Productivité : tracking Rust
-  useEffect(() => {
-    invoke("start_tracking").catch(console.error)
-  }, [])
-
   useActiveWindowTracking((event: ProductivityEvent) => {
     addEvent(event)
   })
 
-  // Productivité : localStorage load
+  // Productivité : charge depuis SQLite au démarrage (sans re-sauvegarder)
   useEffect(() => {
     const { loaded } = useProductivityStore.getState()
     if (loaded) return
-    const saved = loadProductivityEvents()
-    for (const e of saved) {
-      useProductivityStore.getState().addEvent(e)
-    }
-    useProductivityStore.setState({ loaded: true })
+    loadProductivityEvents().then((saved) => {
+      const { setEvents } = useProductivityStore.getState()
+      setEvents(saved)
+      useProductivityStore.setState({ loaded: true })
+      invoke("start_tracking").catch(console.error)
+    })
   }, [])
-
-  // Productivité : localStorage save
-  useEffect(() => {
-    const { loaded, events } = useProductivityStore.getState()
-    if (!loaded) return
-    saveProductivityEvents(events)
-  }, [events])
 
   return (
     <>

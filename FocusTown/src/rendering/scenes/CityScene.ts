@@ -8,7 +8,11 @@ import { Weather } from "../../simulation/world/Weather"
 export class CityScene {
   private app: Application
   private onCitizenClick?: (citizen: Citizen) => void
-  private worldContainer = new Container();
+  private gridContainer = new Container()
+  private tileContainer = new Container()
+  private buildingContainer = new Container()
+  private entityContainer = new Container()
+  private worldContainer = new Container()
   private cameraX = 0;
   private cameraY = 0;
   private camaraZoom = 1;
@@ -86,6 +90,12 @@ export class CityScene {
       this.onTileClick?.(tx, ty)
     })
     this.app.stage.addChild(this.worldContainer)
+    this.worldContainer.addChild(this.gridContainer)
+    this.worldContainer.addChild(this.tileContainer)
+    this.worldContainer.addChild(this.buildingContainer)
+    this.worldContainer.addChild(this.entityContainer)
+
+    this.drawGrid()
   }
 
   getZoom() {
@@ -102,88 +112,9 @@ export class CityScene {
     tiles: Tile[],
     timeOfDay: string,
     weather: Weather,
-    selectedBuildingId?: string | number | null,
     selectedCitizenId?: string | number | null,
-    buildMode?: "house" | "office" | "restaurant" | "road" | "residential" | "commercial" | null
   ) {
-    this.worldContainer.removeChildren()
-    
-    // Draw background first, then interactive entities, then overlays and previews.
-    this.drawGrid()
-
-    tiles.forEach((tile) =>{
-        const graphics = new Graphics()
-        graphics.eventMode = "static";
-        graphics.cursor = "pointer";
-
-        const x = tile.x * TILE_SIZE
-        const y = tile.y * TILE_SIZE
-
-        // Zone coloring has priority so it's clearly visible
-        if (tile.zoneType === "residential") {
-          graphics.beginFill(0x3498db, 0.5)
-        } else if (tile.zoneType === "commercial") {
-          graphics.beginFill(0xf1c40f, 0.5)
-        } else if (tile.type === "grass") {
-          graphics.beginFill(0x2ecc71, 1)
-        } else if (tile.type === "road") {
-          graphics.beginFill(0x555555, 1)
-        } else {
-          graphics.beginFill(0x222222, 1)
-        }
-
-        // draw rect with stroke
-        graphics.lineStyle(1, 0x222222)
-        graphics.drawRect(x, y, TILE_SIZE, TILE_SIZE)
-        graphics.endFill()
-
-        if (buildMode) {
-          graphics.alpha = 0.9
-        }
-
-        graphics.on("pointerover", () => {
-          this.hoverTileX = tile.x
-          this.hoverTileY = tile.y
-        })
-
-        graphics.on("pointerdown", () => {
-          graphics.alpha = 0.5
-          this.onTileClick?.(tile.x, tile.y)
-        })
-
-        this.worldContainer.addChild(graphics)
-    })
-
-    buildings.forEach((building) => {
-      const graphics = new Graphics()
-      graphics.eventMode = "static";
-      graphics.cursor = "pointer";
-
-      graphics.rect(
-        building.x * TILE_SIZE,
-        building.y * TILE_SIZE,
-        TILE_SIZE,
-        TILE_SIZE
-      )
-
-      if(building.type === "house") {
-        graphics.fill(0x3498db)
-      }else if(building.type === "office") {
-        graphics.fill(0xe74c3c)
-      }else if(building.type === "restaurant") {
-        graphics.fill(0xf1c40f)
-      }
-
-      graphics.on("pointerdown", () => {
-        this.onBuildingClick?.(building)
-      })
-
-      if (selectedBuildingId != null && building.id === selectedBuildingId.toString()) {
-        graphics.stroke({width: 3, color: 0xffff00})
-      }
-
-      this.worldContainer.addChild(graphics)
-    })
+    this.entityContainer.removeChildren()
 
     citizens.forEach((citizen) => {
       const graphics = new Graphics()
@@ -220,7 +151,7 @@ export class CityScene {
         graphics.stroke({width: 3, color: 0xffff00})
       }
 
-      this.worldContainer.addChild(graphics)
+      this.entityContainer.addChild(graphics)
     })
     
     // Time-of-day tint sits above the base map but below selection feedback.
@@ -237,7 +168,7 @@ export class CityScene {
     if (timeOfDay === "morning") {
       overlay.fill({color: 0xffffcc,alpha: 0.1,})
     }
-    this.worldContainer.addChild(overlay)
+    this.entityContainer.addChild(overlay)
 
     // Weather is visually layered after the time tint so it remains readable.
     const weatherOverlay = new Graphics();
@@ -252,7 +183,7 @@ export class CityScene {
     if(weather === "storm") {
       weatherOverlay.fill({color: 0x111111,alpha: 0.35,})
     }
-    this.worldContainer.addChild(weatherOverlay)
+    this.entityContainer.addChild(weatherOverlay)
 
     // Hover feedback is always on top of the world so build targeting stays obvious.
     const hoverHighlight = new Graphics()
@@ -260,7 +191,7 @@ export class CityScene {
     hoverHighlight.rect(this.hoverTileX * TILE_SIZE, this.hoverTileY * TILE_SIZE, TILE_SIZE, TILE_SIZE)
     hoverHighlight.fill({ color: 0xffffff, alpha: 0.08 })
     hoverHighlight.stroke({ width: 2, color: 0xffffff, alpha: 0.9 })
-    this.worldContainer.addChild(hoverHighlight)
+    this.entityContainer.addChild(hoverHighlight)
 
     if(this.buildMode) {
       const canBuild = this.canBuildAt(this.hoverTileX, this.hoverTileY, buildings, tiles);
@@ -283,7 +214,7 @@ export class CityScene {
       if(!canBuild) {
         ghost.tint = 0xff0000
       }
-      this.worldContainer.addChild(ghost)
+      this.entityContainer.addChild(ghost)
     }
   }
 
@@ -294,7 +225,7 @@ export class CityScene {
 
           tile.rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE)
           tile.stroke({width: 1, color: 0x555555})
-          this.worldContainer.addChild(tile)
+          this.gridContainer.addChild(tile)
         }
     }
   }
@@ -325,5 +256,81 @@ export class CityScene {
       return false
     }
     return true
+  }
+
+  updateTiles(tiles: Tile[]) {
+    this.tileContainer.removeChildren()
+
+    tiles.forEach((tile) => {
+      const g = new Graphics()
+      g.eventMode = "static"
+      g.cursor = "pointer"
+
+      const x = tile.x * TILE_SIZE
+      const y = tile.y * TILE_SIZE
+
+      if (tile.zoneType === "residential") {
+        g.beginFill(0x3498db, 0.5)
+      } else if (tile.zoneType === "commercial") {
+        g.beginFill(0xf1c40f, 0.5)
+      } else if (tile.type === "grass") {
+        g.beginFill(0x2ecc71, 1)
+      } else if (tile.type === "road") {
+        g.beginFill(0x555555, 1)
+      } else {
+        g.beginFill(0x222222, 1)
+      }
+
+      g.lineStyle(1, 0x222222)
+      g.drawRect(x, y, TILE_SIZE, TILE_SIZE)
+      g.endFill()
+
+      g.on("pointerover", () => {
+        this.hoverTileX = tile.x
+        this.hoverTileY = tile.y
+      })
+
+      g.on("pointerdown", () => {
+        g.alpha = 0.5
+        this.onTileClick?.(tile.x, tile.y)
+      })
+
+      this.tileContainer.addChild(g)
+    })
+  }
+
+  updateBuildings(buildings: Building[], selectedBuildingId?: string | number | null) {
+    this.buildingContainer.removeChildren()
+
+    buildings.forEach((building) => {
+      const g = new Graphics()
+      g.eventMode = "static"
+      g.cursor = "pointer"
+
+      g.rect(
+        building.x * TILE_SIZE,
+        building.y * TILE_SIZE,
+        TILE_SIZE,
+        TILE_SIZE
+      )
+
+      if (building.type === "house") {
+        g.fill(0x3498db)
+      } else if (building.type === "office") {
+        g.fill(0xe74c3c)
+      } else if (building.type === "restaurant") {
+        g.fill(0xf1c40f)
+      }
+
+      g.on("pointerdown", () => {
+        this.onBuildingClick?.(building)
+      })
+
+      if (selectedBuildingId != null && building.id === selectedBuildingId.toString()) {
+        g.stroke({width: 3, color: 0xffff00})
+      }
+
+      this.buildingContainer.addChild(g)
+    })
   }
 }

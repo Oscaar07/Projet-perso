@@ -44,10 +44,52 @@ export const useSimulationStore = create<SimulationState>(() => ({
 }))
 
 export function tickSimulation() {
-  const state = engine.tick()
+  const newState = engine.tick()
   useSimulationStore.setState({
-    ...state,
-    productivitySummary: { ...state.productivitySummary },
-    productivityImpact: { ...state.productivityImpact },
+    ...newState,
+    productivitySummary: { ...newState.productivitySummary },
+    productivityImpact: { ...newState.productivityImpact },
   })
+}
+
+const TICK_MS = 100
+let accumulator = 0
+let lastTime = 0
+let rafId: number | null = null
+
+function gameLoop(time: number) {
+  const delta = time - lastTime
+  lastTime = time
+  accumulator += delta
+
+  // Cap à 1s pour éviter un catch-up massif après un idle onglet
+  if (accumulator > TICK_MS * 10) {
+    accumulator = TICK_MS * 10
+  }
+
+  while (accumulator >= TICK_MS) {
+    const newState = engine.tick()
+    useSimulationStore.setState({
+      ...newState,
+      productivitySummary: { ...newState.productivitySummary },
+      productivityImpact: { ...newState.productivityImpact },
+    })
+    accumulator -= TICK_MS
+  }
+
+  rafId = requestAnimationFrame(gameLoop)
+}
+
+export function startSimulation() {
+  if (rafId !== null) return // déjà démarré
+  lastTime = performance.now()
+  accumulator = 0
+  rafId = requestAnimationFrame(gameLoop)
+}
+
+export function stopSimulation() {
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
 }

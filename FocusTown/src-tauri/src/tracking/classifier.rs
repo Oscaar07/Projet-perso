@@ -1,3 +1,29 @@
+pub fn extract_domain(title: &str, process_name: &str) -> Option<String> {
+    let lower_name = process_name.to_lowercase();
+    let browser_processes = [
+        "chrome.exe", "firefox.exe", "msedge.exe", "brave.exe", "opera.exe"
+    ];
+    if !browser_processes.iter().any(|k| lower_name.contains(k)) {
+        return None;
+    }
+
+    let suffixes = [
+        " - Google Chrome", " — Mozilla Firefox",
+        " - Microsoft Edge", " - Brave", " - Opera",
+    ];
+    for suffix in &suffixes {
+        if title.ends_with(suffix) {
+            let before = &title[..title.len() - suffix.len()];
+            let trimmed = before.trim();
+            if let Some(sep) = trimmed.rfind(" - ") {
+                return Some(trimmed[sep + 3..].to_string());
+            }
+            return Some(trimmed.to_string());
+        }
+    }
+    None
+}
+
 pub fn classify(process_name: &str, title: &str) -> &'static str {
     let lower_name = process_name.to_lowercase();
     let lower_title = title.to_lowercase();

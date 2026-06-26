@@ -31,6 +31,9 @@ import { WorldGenerator } from "../world/WorldGenerator"
 export class SimulationEngine {
   private tickCount = 0
 
+  tilesChanged = false
+  buildingsChanged = false
+
   private citizens: Citizen[] = []
   private movementSystem = new MovementSystem()
   private buildings: Building[] = []
@@ -83,6 +86,8 @@ export class SimulationEngine {
     // Build the initial world once, then spawn citizens from the generated map.
     this.tiles = this.worldGenerator.generate();
     this.buildings = this.buildingGenerator.generate();
+    this.tilesChanged = true
+    this.buildingsChanged = true
     const houses = this.buildings.filter((b)=>b.type === "house");
     const offices = this.buildings.filter((b)=>b.type === "office");
     const restaurants = this.buildings.filter((b)=>b.type === "restaurant"); 
@@ -148,9 +153,13 @@ export class SimulationEngine {
     this.populationSystem.update(this.citizens, this.buildings, this.populationCap, this.residentialDemand)
 
     // Construction can mutate both tiles and buildings, so it runs before finance closes the tick.
+    const prevBuildLen = this.buildings.length
     const constructionState = this.constructionSystem.autoBuildZones({ tiles: this.tiles, buildings: this.buildings, cityMoney: this.cityMoney })
     this.buildings = constructionState.buildings
     this.tiles = constructionState.tiles
+    if (this.buildings.length !== prevBuildLen) {
+      this.buildingsChanged = true
+    }
     this.cityMoney = constructionState.cityMoney
     this.pathfindingGrid.rebuild(this.tiles, this.buildings)
     const fianceState = this.cityFinanceSystem.update({ citizens: this.citizens, buildings: this.buildings, cityMoney: this.cityMoney })
@@ -219,6 +228,8 @@ export class SimulationEngine {
 
     this.buildings = state.buildings
     this.tiles = state.tiles
+    this.tilesChanged = true
+    this.buildingsChanged = true
     this.cityMoney = state.cityMoney
     this.pathfindingGrid.rebuild(this.tiles, this.buildings)
   }
@@ -235,6 +246,8 @@ export class SimulationEngine {
 
     this.buildings = state.buildings
     this.tiles = state.tiles
+    this.tilesChanged = true
+    this.buildingsChanged = true
     this.cityMoney = state.cityMoney
     this.pathfindingGrid.rebuild(this.tiles, this.buildings)    
   }
@@ -252,6 +265,8 @@ export class SimulationEngine {
 
     this.buildings = state.buildings
     this.tiles = state.tiles
+    this.tilesChanged = true
+    this.buildingsChanged = true
     this.cityMoney = state.cityMoney
   }
 
