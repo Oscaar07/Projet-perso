@@ -1,6 +1,9 @@
 import {getActionScores} from "../simulation/ai/debugActionScores"
 import { useSimulationStore } from "../store/simulationStore"
 import { useUIStore } from "../store/uiStore"
+import { useProductivityStore } from "../store/productivityStore"
+import { Relationship } from "../simulation/entities/Citizen"
+import { Memory } from "../simulation/ai/Memory"
 
   export function HUD() {
     // Debug view: surfaces the simulation state that matters most to gameplay balancing.
@@ -9,6 +12,11 @@ import { useUIStore } from "../store/uiStore"
     const bestFriend = selectedCitizen ? [...(selectedCitizen.relationships 
       ?? [])].sort((a, b) => b.friendship - a.friendship)[0] : null
     const actionScores = selectedCitizen ? getActionScores(selectedCitizen) : [];
+    const summary = useProductivityStore((s) => s.summary)
+    const focusStreak = summary.focusSeconds > 0
+      ? Math.floor(summary.focusSeconds / 3600) + "h " +
+        Math.floor((summary.focusSeconds % 3600) / 60) + "min"
+      : "0min"
     
     return (
       <div
@@ -81,7 +89,7 @@ import { useUIStore } from "../store/uiStore"
               Sociability:{" "} {selectedCitizen.personality.sociability.toFixed(2)}
             </div>
             <div>
-              Friends:{" "} {selectedCitizen.relationships.filter((r:any) => r.friendship > 20).length}
+              Friends:{" "} {selectedCitizen.relationships.filter((r: Relationship) => r.friendship > 20).length}
             </div>
             <div>
               Job:{" "} {selectedCitizen.job}
@@ -126,10 +134,10 @@ import { useUIStore } from "../store/uiStore"
               Memories:{" "} {selectedCitizen.memories.length}
             </div>
             <div>
-              Positive Social Memories:{" "} {selectedCitizen.memories.filter((memory:any) => memory.type === "social" && memory.value > 0).length}
+              Positive Social Memories:{" "} {selectedCitizen.memories.filter((memory: Memory) => memory.type === "social" && memory.value > 0).length}
             </div>
             <div>
-              Negative Work Memories:{" "} {selectedCitizen.memories.filter((memory:any) => memory.type === "work" && memory.value < 0).length}
+              Negative Work Memories:{" "} {selectedCitizen.memories.filter((memory: Memory) => memory.type === "work" && memory.value < 0).length}
             </div>
             <div>
               Procrastination:{" "} {selectedCitizen.procrastination.toFixed(0)}
@@ -233,6 +241,16 @@ import { useUIStore } from "../store/uiStore"
 
         <div>
           Burnout / tick: {(simulationState.productivityImpact?.burnoutDelta ?? 0).toFixed(2)}
+        </div>
+
+        <div style={{
+          marginTop: 12, padding: "8px 12px",
+          background: "rgba(0,0,0,0.5)", borderRadius: 6, fontSize: 12,
+          fontFamily: "monospace"
+        }}>
+          <div>Focus today: {focusStreak}</div>
+          <div>Score: {summary.averageProductivityScore.toFixed(0)}%</div>
+          <div>City impact: +{(summary.averageProductivityScore / 10).toFixed(0)}% economy</div>
         </div>
       </div>
     )

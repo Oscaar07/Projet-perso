@@ -27,7 +27,7 @@ The long-term vision is to create:
 
 FocusTown explores the idea of:
 
-> “a city that reflects human focus and productivity.”
+> "a city that reflects human focus and productivity."
 
 The project merges two major systems:
 
@@ -70,7 +70,7 @@ A desktop productivity tracker capable of detecting:
 * burnout patterns
 * behavioral trends
 
-The tracker will eventually synchronize real-world productivity data directly into the simulation.
+The tracker synchronizes real-world productivity data directly into the simulation.
 
 ---
 
@@ -116,11 +116,11 @@ The project aims to evolve progressively from a simple simulation into a living 
 
 ## Core Architecture
 
-* real-time simulation loop
-* tick-based architecture
-* modular systems
-* ECS-inspired structure
+* real-time simulation loop (fixed-timestep accumulator at 10 ticks/sec)
+* modular system architecture (20+ systems + utilities, dependency-ordered)
+* dirty-flag system (tiles/buildings update only on mutation)
 * autonomous entities
+* productivity impact tracking per tick
 
 ---
 
@@ -158,7 +158,7 @@ Each citizen contains:
 * burnout
 * procrastination
 * motivation
-* emotional states
+* emotional states (happy, neutral, sad, anxious, burnout)
 * behavioral routines
 
 ---
@@ -169,6 +169,16 @@ Each citizen contains:
 * relationship persistence
 * emotional contagion
 * social decay
+
+---
+
+## Movement System
+
+Citizens move on a discrete grid with Pokémon-style lock:
+
+* `facingDirection` — down/up/left/right (updated each tick by MovementSystem)
+* `movingTicks` — decremented each tick; citizen skips AI action while moving
+* Rendering interpolates between grid positions via `tickProgress` (0..1) for smooth visual movement
 
 ---
 
@@ -274,7 +284,7 @@ Citizens:
 
 The world is:
 
-* procedurally generated
+* procedurally generated (30x30 grid)
 * scalable
 * grid-based
 
@@ -292,13 +302,13 @@ Current building types:
 * houses
 * offices
 * restaurants
+* roads
 
 Buildings support:
 
 * capacity
 * comfort
 * cleanliness
-* zoning
 
 ---
 
@@ -306,12 +316,14 @@ Buildings support:
 
 Current systems:
 
+* 5 job types (developer, artist, engineer, merchant, scientist) with unique salary/energy tradeoffs
 * salaries
 * taxes
 * money circulation
 * restaurant spending
 * city budget
 * maintenance costs
+* building upkeep
 
 ---
 
@@ -320,9 +332,10 @@ Current systems:
 Includes:
 
 * automatic population growth
-* residential demand
+* residential demand simulation
 * housing systems
 * population caps
+* happiness multiplier on growth
 
 ---
 
@@ -337,13 +350,23 @@ Zones can automatically generate buildings over time.
 
 ---
 
+# Construction
+
+* place buildings (house, office, restaurant)
+* build roads with drag-to-place
+* place residential/commercial zones
+* cost validation
+* ghost preview with canBuild validation
+
+---
+
 # Weather & Time
 
 Includes:
 
-* day/night cycle
+* day/night cycle with visual tinting (night=dark blue, evening=orange, morning=yellow)
 * weather simulation
-* chronotypes
+* chronotypes (morning/night)
 * schedules
 
 Weather states:
@@ -359,21 +382,26 @@ Weather states:
 
 The project uses:
 
-# PixiJS
+# PixiJS (v8)
 
 for:
 
-* high-performance rendering
+* high-performance rendering (WebGPU/WebGL)
 * scalable 2D graphics
 * real-time simulation visualization
 
 Current rendering features:
 
-* tile rendering
-* citizen rendering
-* building rendering
-* camera movement
-* zoom system
+* stateless dirty-flag architecture (tiles/buildings redrawn only on change)
+* 4-layer rendering pipeline (grid, tiles, buildings, entities)
+* tile rendering with filling
+* citizen rendering (colored circles with emotion-based coloring, smooth movement interpolation via tickProgress)
+* building rendering (houses with roof triangles, offices with roof rectangles, restaurants with roof + dot)
+* camera movement (arrow keys)
+* zoom system (mouse wheel, 0.5x-3x)
+* time-of-day and weather visual overlays
+* hover tile highlighting
+* build ghost preview with validation
 
 ---
 
@@ -381,16 +409,40 @@ Current rendering features:
 
 The interface is built with:
 
-# React
+# React (v19)
 
 Current UI systems:
 
-* citizen inspector
-* building inspector
-* build mode
-* analytics HUD
-* simulation statistics
-* time controls
+* citizen inspector (all stats, needs, emotions, personality, habits, best friend, debug action scores)
+* building inspector (type, capacity, stats)
+* build mode selector (6 modes + cancel)
+* analytics HUD (population, money, demand, productivity impact per tick with deltas)
+* simulation statistics with procrastination, burnout, and debug scores
+* productivity dashboard with Recharts stacked bar chart and event journal
+* focus streak tracking
+* simulation speed controls (0.5x, 1x, 2x, 4x)
+* pause/play toggle
+* simulation save/load with named saves (list, load, delete)
+* classifier settings modal (focus/distraction domains, poll interval, idle timeout)
+* extension connection status indicator (green/red dot)
+* error boundary with reload fallback
+
+---
+
+# Desktop App
+
+The desktop app is built with:
+
+# Tauri (v2)
+
+* Rust backend for system-level access
+* Windows API active window detection
+* Idle detection via GetLastInputInfo
+* Granular keyboard/mouse activity tracking via `rdev` crate
+* App/site classification (focus/distraction/idle/unknown)
+* Configurable classifier with user-editable focus/distraction rules
+* WebSocket server (`ws://127.0.0.1:9736`) for browser extension integration
+* SQLite database for productivity event persistence
 
 ---
 
@@ -409,6 +461,19 @@ This forms the foundation for future real-world productivity integration.
 
 ---
 
+# Productivity Bridge
+
+A dedicated system (`ProductivityInfluenceSystem`) maps real-world focus/distraction ratios into the simulation:
+
+| Real Behavior    | Simulation Effect                          |
+| ---------------- | ------------------------------------------ |
+| Focus session    | Citizen mood ↑, stress ↓, motivation ↑ |
+| Distraction      | Citizen stress ↑, burnout ↑, city money ↓ |
+| Idle             | City money ↓                            |
+| Break            | Slight positive effect                  |
+
+---
+
 # Architecture
 
 FocusTown follows a modular architecture inspired by:
@@ -416,7 +481,7 @@ FocusTown follows a modular architecture inspired by:
 * simulation engines
 * city builders
 * game engines
-* ECS-inspired systems
+* modular system architecture
 
 ---
 
@@ -424,39 +489,52 @@ FocusTown follows a modular architecture inspired by:
 
 ```txt
 src/
-├── simulation/         # Simulation engine, systems, entities
-│   ├── ai/             # Utility AI, scoring, memory
-│   ├── engine/         # Tick loop, system orchestration
-│   ├── entities/       # Citizens, buildings, tiles
-│   ├── systems/        # 20+ independent simulation systems
-│   ├── world/          # World generation, weather, zoning
-│   └── config/         # Global constants
+├── simulation/            # Simulation engine, systems, entities
+│   ├── ai/                # Utility AI, scoring, memory
+│   ├── engine/            # Tick loop, system orchestration
+│   ├── entities/          # Citizens (with movingTicks, facingDirection), buildings
+│   ├── systems/           # 20+ independent simulation systems
+│   ├── world/             # World generation, weather, zoning
+│   ├── config/            # Global constants
+│   ├── SimulationSerializer.ts  # Simulation save/load serialization
+│   └── SimulationStorage.ts     # Simulation persistence layer
 │
-├── rendering/          # PixiJS visual layer
-│   └── scenes/         # CityScene — tile, citizen, building rendering
+├── rendering/             # PixiJS visual layer
+│   ├── scenes/            # CityScene — tile, citizen (circles), building rendering
 │
-├── store/              # Zustand stores (simulation, UI, productivity)
-├── productivity/       # Types, summaries, localStorage persistence
-├── tracking/           # Tauri event listeners (active window tracking)
-├── ui/                 # React components (HUD, dashboards)
-├── app/                # Application entry point (App.tsx)
-├── database/           # (future SQLite)
-├── components/         # (future shared components)
-├── hooks/              # (future custom hooks)
-├── services/           # (future service layer)
-├── types/              # (future shared types)
-├── utils/              # (future utilities)
-├── pages/              # (future routing)
-└── styles/             # (future global styles)
+├── store/                 # Zustand stores (simulation, UI, productivity)
+├── productivity/          # Types, summaries, analytics, daily reports, storage
+├── tracking/              # React hook for Tauri active window tracking
+├── ui/                    # React components (HUD, dashboard, classifier settings modal)
+├── app/                   # Application entry point (App.tsx)
+├── database/              # (empty — future migrations)
+├── components/            # (empty — future shared components)
+├── hooks/                 # (empty — future custom hooks)
+├── services/              # (empty — future service layer)
+├── types/                 # (empty — future shared types)
+├── utils/                 # (empty — future utilities)
+├── pages/                 # (empty — future routing)
+└── styles/                # (empty — future global styles)
 
 src-tauri/
 └── src/
-    ├── commands/       # Tauri IPC commands (start_tracking, etc.)
-    ├── tracking/       # Windows API active window detection
-    ├── database/       # (future SQLite)
-    ├── system/         # (future system-level features)
-    ├── utils/          # (future utilities)
-    ├── lib.rs          # Tauri app builder
+    ├── commands/       # Tauri IPC commands: tracking, events, reports, simulation save/load, classifier config, extension status
+    │   ├── mod.rs
+    │   ├── tracking.rs
+    │   ├── reports.rs
+    │   ├── simulation.rs
+    │   └── config.rs   # get_classifier_config, set_classifier_config, get_extension_status
+    ├── tracking/       # Windows API active window detection + idle detection + classification + input tracking
+    │   ├── tracker.rs
+    │   ├── classifier.rs   # ClassifierConfig, classify() with configurable domains
+    │   └── input.rs        # Global keyboard/mouse listener via rdev
+    ├── network/        # WebSocket server for browser extension
+    │   └── mod.rs      # ws://127.0.0.1:9736 — receives URL events, forwards to Tauri
+    ├── database/       # SQLite connection, schema, models, queries
+    │   ├── db.rs       # Includes app_config table init, load_classifier_config()
+    │   ├── models.rs
+    │   └── queries.rs
+    ├── lib.rs          # Tauri app builder (WS server, input listener, config loading)
     └── main.rs         # Windows entry point
 ```
 
@@ -486,9 +564,10 @@ Core simulation orchestration.
 
 Responsible for:
 
-* ticks
-* system execution
+* fixed-timestep accumulator (100ms ticks)
+* system execution with dependency ordering
 * world updates
+* 1-second catch-up cap to prevent spiral-of-death
 
 ---
 
@@ -500,21 +579,34 @@ Examples:
 
 * citizens
 * buildings
-* relationships
 
 ---
 
 ### systems/
 
-Independent simulation systems.
+20 independent simulation systems executed in order each tick:
 
-Examples:
-
-* movement
-* social simulation
-* economy
-* memory
-* psychology
+1. TimeSystem — day/night cycle, weather progression
+2. ScheduleSystem — chronotype-based work/sleep schedules
+3. ActionTargetSystem — UtilityAI → target assignment
+4. PathfindingSystem — A* with traffic-aware routing
+5. MovementSystem — path following with occupancy tracking
+6. LocationEffectSystem — home/restaurant effects
+7. NeedsSystem — hunger, energy, mood, hygiene, fun, stress decay
+8. EmotionSystem — emotional state machine
+9. MemorySystem — memory creation + pruning
+10. HabitSystem — habit reinforcement/decay
+11. ProcrastinationSystem — procrastination/burnout mechanics
+12. HealthSystem — health/sickness
+13. HousingSystem — home comfort/cleanliness effects
+14. JobSystem — per-job salary and energy/mood effects
+15. EconomySystem — money, spending, salaries
+16. SocialSystem — friendships, emotional contagion, social decay
+17. PopulationSystem — spawning, housing demand, growth
+18. CityFinanceSystem — taxes, building upkeep, bankruptcy
+19. ConstructionSystem — build, road, zone, auto-build
+20. ProductivityInfluenceSystem — real productivity → simulation bridge
+21. PathfindingGrid — traffic grid utility for pathfinding
 
 ---
 
@@ -533,13 +625,13 @@ Examples:
 
 ### config/
 
-Global constants and configuration.
+Global constants and configuration (world dimensions, tick rate, etc.).
 
 ---
 
 # Tick Lifecycle
 
-The simulation uses a deterministic tick-based architecture.
+The simulation uses a deterministic tick-based architecture with a fixed-timestep accumulator.
 
 Each tick updates the entire world state.
 
@@ -553,16 +645,24 @@ Simulation Tick
 ├── update time
 ├── update weather
 ├── update schedules
-├── update memories
 ├── update AI decisions
 ├── update pathfinding
 ├── update movement
+├── update location effects
 ├── update needs
 ├── update emotions
+├── update memories
+├── update habits
+├── update procrastination
+├── update health
+├── update housing
+├── update jobs
 ├── update economy
 ├── update social systems
 ├── update population
-├── update city economy
+├── update city finance
+├── update construction / zoning
+├── update productivity influence
 └── render frame
 ```
 
@@ -608,6 +708,14 @@ Outputs:
 
 ---
 
+# ActionTargetSystem
+
+Bridges UtilityAI scoring into actual movement target assignment.
+Clears existing paths when a new action is chosen.
+Skips citizens with `movingTicks > 0` (Pokémon-style action lock during movement).
+
+---
+
 # MovementSystem
 
 Handles:
@@ -615,6 +723,9 @@ Handles:
 * movement
 * path following
 * navigation execution
+* per-tile occupancy tracking
+* Sets `facingDirection` (down/up/left/right) each tick
+* Increments `movingTicks` while moving — AI actions are locked during movement
 
 ---
 
@@ -622,9 +733,9 @@ Handles:
 
 Current:
 
-* A* pathfinding with traffic-aware routing
-* occupancy-based traffic penalty system
-* shortest-path optimization via movementCost heuristics
+* A* pathfinding with Manhattan heuristic
+* traffic-aware routing via occupancy-based penalty system
+* pathfinding iteration cap to prevent hangs
 
 ---
 
@@ -644,10 +755,11 @@ Updates:
 
 Handles:
 
-* salaries
+* salaries (5 job types with different rates)
 * taxes
-* spending
+* spending (restaurant costs)
 * money circulation
+* city budget management
 
 ---
 
@@ -656,7 +768,7 @@ Handles:
 Handles:
 
 * friendships
-* emotional contagion
+* emotional contagion (stress, burnout spread)
 * social decay
 * interactions
 
@@ -681,7 +793,7 @@ Controls:
 
 * work schedules
 * sleep routines
-* chronotypes
+* chronotypes (morning lark / night owl)
 * productivity windows
 
 ---
@@ -693,7 +805,73 @@ Handles:
 * spawning
 * housing availability
 * population growth
-* demand simulation
+* demand simulation (residential demand driven by unemployment + happiness)
+
+---
+
+# HabitSystem
+
+Controls:
+
+* habit reinforcement (repeated actions strengthen habits)
+* habit decay (inactivity weakens habits)
+* habit-influenced action scoring
+
+---
+
+# ProcrastinationSystem
+
+Controls:
+
+* procrastination build-up from low motivation
+* burnout accumulation from overwork
+* burnout recovery during relaxation
+
+---
+
+# ProductivityInfluenceSystem
+
+Bridges real-world productivity data into the simulation.
+
+Affects:
+
+* citizen mood
+* stress
+* burnout
+* motivation
+* city money
+
+---
+
+# TimeSystem
+
+Controls:
+
+* time-of-day progression
+* day/night cycle with phase tracking
+* weather state changes
+
+---
+
+# ConstructionSystem
+
+Controls:
+
+* building placement (6 types + road)
+* road drag-to-place
+* zone placement (residential, commercial)
+* auto-building from zones (0.1% chance per tick)
+* cost validation
+
+---
+
+# CityFinanceSystem
+
+Controls:
+
+* tax collection from employed citizens
+* building upkeep costs
+* bankruptcy detection (cityMoney < -1000)
 
 ---
 
@@ -709,6 +887,9 @@ Rendering:
 
 * visualizes state only
 
+Movement interpolation uses `tickProgress` (0..1) for smooth grid-to-grid transitions.
+Sprite loading pipeline is planned but not yet implemented.
+
 Benefits:
 
 * maintainability
@@ -722,24 +903,39 @@ Benefits:
 
 ## Frontend
 
-* React + Zustand (state management)
-* TypeScript
+* React 19 + Zustand 5 (state management)
+* TypeScript 5.8
 * PixiJS v8 (WebGPU/WebGL rendering)
-* Vite
+* Recharts 3 (productivity charts)
+* Vite 7
+* Tailwind CSS 4 (available, not yet integrated)
 
 ## Desktop
 
 * Tauri v2 (Rust backend)
 * Windows API (active window detection via `windows` crate)
+* rusqlite (SQLite persistence)
+* serde (serialization)
+* tokio + tokio-tungstenite (WebSocket server for browser extension)
+* rdev (global keyboard/mouse input listener)
 
 ---
 
 ## Database
 
+Current:
+
+* SQLite via rusqlite (`focustown.db`)
+* `productivity_events` table with full CRUD
+* `simulation_saves` table with named save data
+* `app_config` table for classifier config persistence (key-value)
+* IPC commands for save/query/daily reports
+* IPC commands for simulation save/load/list/delete
+* IPC commands for classifier config get/set and extension status
+
 Planned:
 
-* SQLite
-* PostgreSQL
+* PostgreSQL (optional cloud sync)
 
 ---
 
@@ -750,11 +946,7 @@ Planned:
 * Node.js 18+
 * npm or pnpm
 * Git
-
-Optional:
-
-* Rust
-* Tauri CLI
+* Rust toolchain (for desktop build)
 
 ---
 
@@ -778,7 +970,7 @@ Install dependencies:
 npm install
 ```
 
-Start development server:
+Start development server (browser-only):
 
 ```bash
 npm run dev
@@ -878,25 +1070,31 @@ Simulation behavior should remain:
 
 Current prototype limitations:
 
-* no save system (localStorage only for productivity events)
-* no ECS implementation yet
+* no ECS implementation yet (traditional OOP with modular systems)
 * limited optimization for 1000+ citizens
-* no persistence for simulation state
-* no real productivity sync yet (manual buttons + active window polling)
+* browser extension exists but needs manual installation — not yet distributed
+* no sprite loading pipeline (SpriteLoader not implemented)
+* citizen rendering uses colored circles (no sprites yet)
+* no sound
+* test suite: 211 tests across 26 files covering all 15 simulation systems
+* no cloud sync or cross-device support
 
 ---
 
 # Immediate TODOs
 
-# Simulation
+# Simulation — Backend
 
-* optimize citizen updates for 1000+ targets
-* improve zoning auto-construction
-* improve city economy balancing
+* citizen lifecycle (aging → death, emigration, replacement cycle)
+* education & career specialization system
+* events & crises (natural disasters, epidemics, recessions)
+* infrastructure basics (electricity, water, garbage)
+* crime & policing system
+* performance optimization for 1000+ citizens
 
 ---
 
-# AI
+# Simulation — AI
 
 * improve routines
 * improve emotional simulation
@@ -918,31 +1116,14 @@ Current prototype limitations:
 
 * [x] create Tauri app
 * [x] detect active windows (Rust polling every 5s)
+* [x] detect idle time (GetLastInputInfo, 100s timeout)
 * [x] build analytics dashboard
-* [ ] track browser websites
-* [ ] track idle time
-
----
-
-# Productivity Tracker Vision
-
-The future desktop tracker will monitor:
-
-* active applications
-* browser activity
-* idle time
-* multitasking
-* distractions
-* focus sessions
-* behavioral patterns
-
-The tracker will influence:
-
-* citizen morale
-* economy
-* stress
-* burnout
-* city stability
+* [x] SQLite database for event persistence
+* [x] track browser websites (via WebSocket server + browser extension)
+* [x] full keyboard/mouse activity tracking (rdev global listener)
+* [x] configurable classifier (focus/distraction domains, poll interval, idle timeout)
+* [x] extension connection status indicator
+* [ ] browser extension distribution / auto-install
 
 ---
 
@@ -998,6 +1179,20 @@ Inspired by:
 - [x] Memory system (short-term memories affecting choices) — [src/simulation/systems/MemorySystem.ts](src/simulation/systems/MemorySystem.ts#L1)
 - [x] Utility AI action scoring — [src/simulation/ai/UtilityAI.ts](src/simulation/ai/UtilityAI.ts#L1)
 - [x] Day/night & weather overlays (lighting) — [src/rendering/scenes/CityScene.ts](src/rendering/scenes/CityScene.ts#L200)
+- [x] SQLite database for productivity events — [src-tauri/src/database/db.rs](src-tauri/src/database/db.rs#L1)
+- [x] Active window + idle detection (Windows API) — [src-tauri/src/tracking/tracker.rs](src-tauri/src/tracking/tracker.rs#L1)
+- [x] App/site classification system — [src-tauri/src/tracking/classifier.rs](src-tauri/src/tracking/classifier.rs#L1)
+- [x] Productivity → Simulation bridge — [src/simulation/systems/ProductivityInfluenceSystem.ts](src/simulation/systems/ProductivityInfluenceSystem.ts#L1)
+- [x] Construction/build mode with ghost preview — [src/simulation/systems/ConstructionSystem.ts](src/simulation/systems/ConstructionSystem.ts#L1)
+- [x] Job system (5 job types) — [src/simulation/systems/JobSystem.ts](src/simulation/systems/JobSystem.ts#L1)
+- [x] Chronotype-based schedules — [src/simulation/systems/ScheduleSystem.ts](src/simulation/systems/ScheduleSystem.ts#L1)
+- [x] Productivity dashboard (Recharts) — [src/ui/ProductivityDashboard.tsx](src/ui/ProductivityDashboard.tsx#L1)
+- [x] Simulation save/load (serialization + Rust persistence) — [src/simulation/SimulationSerializer.ts](src/simulation/SimulationSerializer.ts#L1), [src/simulation/SimulationStorage.ts](src/simulation/SimulationStorage.ts#L1), [src-tauri/src/commands/simulation.rs](src-tauri/src/commands/simulation.rs#L1)
+- [x] Pause/play and speed controls (0.5x–4x) — [src/app/App.tsx](src/app/App.tsx#L161)
+- [x] Simulation serializer + deserializer (full state JSON roundtrip)
+- [x] Stateless dirty-flag rendering — [src/rendering/scenes/CityScene.ts](src/rendering/scenes/CityScene.ts#L1)
+- [x] WebSocket server for browser extension — [src-tauri/src/network/mod.rs](src-tauri/src/network/mod.rs#L1)
+- [x] Configurable classifier with Tauri commands — [src-tauri/src/commands/config.rs](src-tauri/src/commands/config.rs#L1)
 
 # Phase 1 — Desktop Productivity Tracker
 
@@ -1005,29 +1200,44 @@ Inspired by:
 
 * [x] Create Tauri application
 * [x] Setup React frontend
-* [ ] Setup SQLite database
+* [x] SQLite database setup
 
 ## Activity Monitoring
 
 * [x] Detect active window (Rust polling via Windows API)
 * [x] Detect application usage (process name + window title)
-* [ ] Track idle time
-* [ ] Track keyboard activity
-* [ ] Track mouse activity
+* [x] Detect idle time (GetLastInputInfo)
+* [x] Track keyboard activity (global listener via rdev)
+* [x] Track mouse activity (global listener via rdev)
 
 ## Browser Tracking
 
-* [ ] Website tracking
-* [ ] Domain categorization
-* [ ] Distraction detection
-* [ ] Doomscroll detection
+* [x] WebSocket server in Tauri (ws://127.0.0.1:9736)
+* [x] Website tracking (full URL via browser extension)
+* [x] Domain categorization
+* [x] Distraction detection
+* [ ] Extension distribution / auto-install
 
 ## Data Storage
 
-* [ ] Session history
-* [ ] Daily analytics
-* [ ] Productivity logs
-* [ ] Time-series tracking
+* [x] Session history
+* [x] Daily analytics
+* [x] Productivity logs
+* [x] Classifier config persistence (app_config table)
+* [x] Extension connection status (AtomicBool, Tauri command)
+* [ ] Time-series tracking (advanced bucketing)
+
+---
+
+## Simulation & Rendering
+
+* [x] Configurable classifier (focus/distraction URLs, poll interval, idle timeout)
+* [x] Keyboard/mouse activity detection (rdev global listener)
+* [x] WebSocket browser extension integration
+* [x] Pokémon-style movement lock (movingTicks, facingDirection, ActionTargetSystem skip)
+* [x] Smooth movement interpolation (tickProgress in CityScene)
+* [ ] Sprite loading pipeline (SpriteLoader, CitizenSpritesheet)
+* [ ] Actual spritesheet assets integrated
 
 ---
 
@@ -1049,10 +1259,10 @@ Inspired by:
 
 ## Visualization
 
-* [ ] Charts
-* [ ] Productivity timeline
+* [x] Charts (Recharts stacked bar)
+* [x] Productivity timeline
 * [ ] Heatmaps
-* [ ] Daily reports
+* [x] Daily reports
 
 ---
 
@@ -1060,20 +1270,20 @@ Inspired by:
 
 ## Productivity Influence
 
-* [ ] Real productivity boosts city economy
-* [ ] Focus sessions improve citizen morale
-* [ ] Deep work increases city growth
+* [x] Real productivity boosts city economy
+* [x] Focus sessions improve citizen morale
+* [x] Deep work increases city growth
 
 ## Procrastination Influence
 
-* [ ] Doomscrolling increases burnout
-* [ ] Distractions reduce productivity
-* [ ] Multitasking affects citizen stress
+* [x] Doomscrolling increases burnout
+* [x] Distractions reduce productivity
+* [x] Multitasking affects citizen stress
 
 ## Emotional Sync
 
-* [ ] User fatigue affects citizens
-* [ ] User focus affects AI behavior
+* [x] User fatigue affects citizens
+* [x] User focus affects AI behavior
 * [ ] User habits shape city culture
 
 ---
@@ -1105,13 +1315,17 @@ Inspired by:
 
 # Phase 5 — Advanced Society Simulation
 
-## Families
+## Families & Citizen Lifecycle
 
-* [ ] Couples
-* [ ] Marriage
-* [ ] Children
-* [ ] Aging
-* [ ] Death
+* [ ] Age tracking (birth tick, life stages)
+* [ ] Children (spawn, growth, education)
+* [ ] Education system (schools, skill progression, career access)
+* [ ] Career specialization (education level unlocks better jobs)
+* [ ] Couples & marriage
+* [ ] Aging (stat decay, retirement)
+* [ ] Death (natural, accident, health < 0)
+* [ ] Emigration (unhappiness, economic factors)
+* [ ] Replacement cycle (new citizens to fill vacancies)
 
 ## Social Structures
 
@@ -1158,10 +1372,12 @@ Inspired by:
 
 ## Emergence
 
-* [ ] Economic crises
-* [ ] Burnout epidemics
-* [ ] Social collapse
-* [ ] Productivity booms
+* [ ] Economic crises (recessions, inflation, market crashes)
+* [ ] Burnout epidemics (contagious stress spirals)
+* [ ] Social collapse (mass emigration, abandonment)
+* [ ] Productivity booms (innovation eras)
+* [ ] Natural disasters (fire, flood, earthquake)
+* [ ] Epidemics (contagious illness spreading through proximity)
 
 ---
 
@@ -1169,9 +1385,9 @@ Inspired by:
 
 ## Graphics
 
-* [ ] Sprites
-* [ ] Animations
-* [x] Lighting
+* [ ] Sprites (loader + sheet needed)
+* [ ] Animations (interpolation done, frames need spritesheet)
+* [x] Lighting (day/night/weather overlays)
 * [ ] Particle effects
 
 ## UI
@@ -1179,7 +1395,7 @@ Inspired by:
 * [ ] Modern HUD
 * [ ] Minimap
 * [x] Statistics panels
-* [ ] Productivity dashboards
+* [x] Productivity dashboards (Recharts)
 
 ---
 
@@ -1187,10 +1403,11 @@ Inspired by:
 
 ## Saves
 
-* [ ] Save system
+* [x] Save system (simulation state via Tauri + SQLite)
 * [ ] Autosave
-* [ ] Persistent citizens
-* [ ] Persistent analytics
+* [x] Persistent citizens (included in save state)
+* [x] Persistent analytics (SQLite)
+* [x] Named saves with load/delete
 
 ## Cloud
 

@@ -1,10 +1,22 @@
+/**
+ * Agrégation des événements de productivité en timeline pour le graphique.
+ *
+ * Prend tous les événements de la journée et les répartit dans des
+ * buckets de 30 minutes. Chaque bucket totalise les secondes de chaque
+ * type d'activité (focus, distraction, idle, break, unknown) qui
+ * chevauchent ce créneau. Un événement long peut s'étendre sur plusieurs
+ * buckets — on découpe proportionnellement.
+ *
+ * Le résultat alimente le Recharts BarChart du dashboard.
+ */
 import { ProductivityEvent } from "./types"
 
 export type TimelineBucket = {
-  label: string        // "08h", "08h30", "09h", ...
-  focus: number        // secondes de focus dans ce créneau
+  label: string
+  focus: number
   distraction: number
   idle: number
+  break: number
   unknown: number
 }
 
@@ -14,13 +26,11 @@ export function buildTimeline(
   events: ProductivityEvent[],
   dayKey: string
 ): TimelineBucket[] {
-  // 1. Filtrer les events du jour
   const dayEvents = events.filter(
     (e) => new Date(e.startedAt).toISOString().slice(0, 10) === dayKey
   )
   if (dayEvents.length === 0) return []
 
-  // 2. Créer 48 buckets de 30min (00h00 → 23h59)
   const buckets: TimelineBucket[] = Array.from({ length: 48 }, (_, i) => {
     const hour = Math.floor(i / 2)
     const min = (i % 2) * 30
@@ -29,11 +39,11 @@ export function buildTimeline(
       focus: 0,
       distraction: 0,
       idle: 0,
+      break: 0,
       unknown: 0,
     }
   })
 
-  // 3. Répartir chaque event dans les buckets qu'il chevauche
   const dayStartMs = new Date(dayKey + "T00:00:00").getTime()
   const bucketMs = BUCKET_MINUTES * 60 * 1000
 
@@ -60,6 +70,7 @@ export function buildTimeline(
       if (event.type === "focus") buckets[b].focus += overlapSec
       else if (event.type === "distraction") buckets[b].distraction += overlapSec
       else if (event.type === "idle") buckets[b].idle += overlapSec
+      else if (event.type === "break") buckets[b].break += overlapSec
       else buckets[b].unknown += overlapSec
     }
   }

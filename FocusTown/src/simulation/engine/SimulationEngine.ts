@@ -27,6 +27,7 @@ import { CityFinanceSystem} from "../systems/CityFinanceSystem"
 import { ConstructionSystem } from "../systems/ConstructionSystem"
 import { LocationEffectSystem } from "../systems/LocationEffectSystem"
 import { WorldGenerator } from "../world/WorldGenerator"
+import { SimulationSaveData } from "../SimulationSerializer"
 
 export class SimulationEngine {
   private tickCount = 0
@@ -131,7 +132,7 @@ export class SimulationEngine {
     // Systems are run in dependency order: cognition first, movement later, then outcomes.
     this.memorySystem.update(this.citizens, this.tickCount)
     this.scheduleSystem.update(this.citizens, this.time)
-    this.actionTargetSystem.update(this.citizens)
+    this.actionTargetSystem.update(this.citizens, this.buildings)
     this.habitSystem.update(this.citizens)
     this.procrastinationSystem.update(this.citizens)
     this.pathfindingSystem.update(this.citizens, this.pathfindingGrid)
@@ -274,4 +275,37 @@ export class SimulationEngine {
     // External productivity tracking feeds back into the simulation through this setter.
     this.productivitySummary = summary
   }
+
+  exportState(): SimulationSaveData {
+    return {
+      tickCount: this.tickCount,
+      time: this.time,
+      day: this.day,
+      weather: this.weather,
+      cityMoney: this.cityMoney,
+      residentialDemand: this.residentialDemand,
+      populationCap: this.populationCap,
+      productivitySummary: { ...this.productivitySummary },
+      citizens: this.citizens.map(c => ({ ...c, path: [...c.path], memories: [...c.memories], relationships: [...c.relationships], habits: { ...c.habits }, personality: { ...c.personality } })),
+      buildings: this.buildings.map(b => ({ ...b })),
+      tiles: this.tiles.map(t => ({ ...t })),
+    }
+  }
+
+  importState(data: SimulationSaveData): void {
+      this.tickCount = data.tickCount
+      this.time = data.time
+      this.day = data.day
+      this.weather = data.weather
+      this.cityMoney = data.cityMoney
+      this.residentialDemand = data.residentialDemand
+      this.populationCap = data.populationCap
+      this.productivitySummary = { ...data.productivitySummary }
+      this.citizens = data.citizens.map(c => ({ ...c, path: [...c.path], memories: [...c.memories], relationships: [...c.relationships], habits: { ...c.habits }, personality: { ...c.personality } }))
+      this.buildings = data.buildings.map(b => ({ ...b }))
+      this.tiles = data.tiles.map(t => ({ ...t }))
+      this.pathfindingGrid.rebuild(this.tiles, this.buildings)
+      this.tilesChanged = true
+      this.buildingsChanged = true
+    }
 }

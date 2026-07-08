@@ -1,3 +1,18 @@
+/**
+ * IA utilitaire pour les décisions des citoyens.
+ *
+ * À chaque tick, évalue 6 actions possibles (sleep, eat, work, socialize,
+ * relax, wander) avec un score basé sur :
+ * - Les besoins physiologiques (energy, hunger)
+ * - Les désirs horaires (workDesire, sleepDesire du ScheduleSystem)
+ * - Les traits de personnalité (diligence, discipline, etc.)
+ * - Les habitudes (HabitSystem)
+ * - Les souvenirs (MemorySystem)
+ * - Le stress et la motivation
+ *
+ * L'action avec le score le plus élevé est sélectionnée par
+ * ActionTargetSystem qui fixe la cible correspondante.
+ */
 import { Citizen } from "../entities/Citizen"
 import { UtilityAction } from "./UtilityAction"
 
@@ -6,8 +21,8 @@ export class UtilityAI {
   evaluate(citizen: Citizen): UtilityAction[] {
 
     const actions: UtilityAction[] = []
-    const positiveSocialMemories  = citizen.memories.filter((memory) => memory.type === "social" && memory.value > 0).length
-    const negativeWorkMemories  = citizen.memories.filter((memory) => memory.type === "work" && memory.value < 0).length
+    const positiveSocialMemories = citizen.memories.filter((memory) => memory.type === "social" && memory.value > 0).length
+    const negativeWorkMemories = citizen.memories.filter((memory) => memory.type === "work" && memory.value < 0).length
 
     actions.push({
       type: "sleep",

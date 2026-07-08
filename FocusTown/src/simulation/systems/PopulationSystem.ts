@@ -1,3 +1,18 @@
+/**
+ * Gère la croissance démographique : de nouveaux citoyens apparaissent
+ * dans les maisons qui ont de la place, selon la demande résidentielle
+ * et le moral moyen de la ville.
+ *
+ * Logique :
+ * - Ne spawn que si population < populationCap
+ * - Chaque maison a un maxResidents (capacité max)
+ * - Le moral moyen de la ville sert de multiplicateur de bonheur
+ * - La demande résidentielle (0-100) pilote la probabilité de spawn
+ * - Un nouveau citoyen a besoin d'un office et d'un restaurant libres
+ *
+ * Le spawn est probabiliste : spawnChance par maison par tick.
+ * À 100% de demande et 100% de moral : 0.01% de chance par tick.
+ */
 import { Citizen } from "../entities/Citizen"
 import { Building } from "../entities/Building"
 import { createCitizen  } from "../entities/CitizenFactory"
@@ -20,12 +35,11 @@ export class PopulationSystem {
             const hapinessMultiplier = averageMood / 100
             const spawnChance = residentialDemand * 0.0001 * hapinessMultiplier
             const workplace = offices[Math.floor(Math.random() * offices.length)]
-            const restaurant = restaurants[Math.floor(Math.random() * restaurants.length)] 
+            const restaurant = restaurants[Math.floor(Math.random() * restaurants.length)]
             if(offices.length === 0 || restaurants.length === 0) {
                 console.warn("Not enough buildings to spawn new citizens")
                 return
             }
-
 
             if(residents.length < maxResidents) {
                 if(Math.random() < spawnChance) {

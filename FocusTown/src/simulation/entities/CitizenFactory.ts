@@ -15,6 +15,9 @@ export function createCitizen(params: {name: string, home: Building, workplace?:
         
           x: params.home.x,
           y: params.home.y,
+
+          prevX: params.home.x,
+          prevY: params.home.y,
         
           targetX: workplace.x,
           targetY: workplace.y,
@@ -66,5 +69,7 @@ export function createCitizen(params: {name: string, home: Building, workplace?:
           confidence: Math.random()*100,
           perfectionism: Math.random()*100,
           emotionalState: "neutral",
+          movingTicks: 0,
+          facingDirection: "down",
     }
 }

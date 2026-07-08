@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef , useState} from "react"
 import { Application } from "pixi.js"
-import { useSimulationStore, engine, tickSimulation, startSimulation, stopSimulation } from "../store/simulationStore"
+import { useSimulationStore, engine, tickSimulation, startSimulation, stopSimulation, togglePause, setSpeed, setRenderCallback } from "../store/simulationStore"
 import { useUIStore } from "../store/uiStore"
 import { useProductivityStore } from "../store/productivityStore"
 import { CityScene } from "../rendering/scenes/CityScene"
@@ -9,18 +9,23 @@ import { HUD } from "../ui/HUD"
 import { ProductivityDashboard } from "../ui/ProductivityDashboard"
 import { useActiveWindowTracking } from "../tracking/useActiveWindowTracking"
 import { invoke } from "@tauri-apps/api/core"
-import { ProductivityEvent } from "../productivity/types"
 import { loadProductivityEvents } from "../productivity/ProductivityStorage"
+import { serializeEngine, deserializeEngine } from "../simulation/SimulationSerializer"
+import { saveSimulation, loadSimulation, listSaves } from "../simulation/SimulationStorage"
 
 function App() {
   const sim = useSimulationStore()
-  const { selectedBuilding, selectedCitizen, setBuildMode, setSelectedCitizen, setSelectedBuilding } = useUIStore()
+  const { setBuildMode, setSelectedCitizen, setSelectedBuilding } = useUIStore()
   const { events, activeFocusStartedAt, addEvent, clearAll, startFocus, stopFocus } = useProductivityStore()
 
   const appRef = useRef<Application | null>(null)
   const citySceneRef = useRef<CityScene | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const initializedRef = useRef(false)
+
+  const [saveName, setSaveName] = useState("")
+  const [saves, setSaves] = useState<{ name: string; created_at: string }[]>([])
+  const [showLoadMenu, setShowLoadMenu] = useState(false)
 
   useEffect(() => {
     startSimulation()
@@ -76,23 +81,28 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const scene = citySceneRef.current
-    if (!scene) return
+    setRenderCallback((tickProgress) => {
+      const scene = citySceneRef.current
+      if (!scene) return
+      const state = useSimulationStore.getState()
+      const uiState = useUIStore.getState()
 
-    if (engine.tilesChanged) {
-      scene.updateTiles(sim.tiles)
-      engine.tilesChanged = false
-    }
-    if (engine.buildingsChanged) {
-      scene.updateBuildings(sim.buildings, selectedBuilding?.id)
-      engine.buildingsChanged = false
-    }
-    scene.render(
-      sim.citizens, sim.buildings, sim.tiles,
-      sim.timeOfDay, sim.weather,
-      selectedCitizen?.id,
-    )
-  }, [sim])
+      if (engine.tilesChanged) {
+        scene.updateTiles(state.tiles)
+        engine.tilesChanged = false
+      }
+      if (engine.buildingsChanged) {
+        scene.updateBuildings(state.buildings, uiState.selectedBuilding?.id)
+        engine.buildingsChanged = false
+      }
+      scene.render(
+        state.citizens, state.buildings, state.tiles,
+        state.timeOfDay, state.weather,
+        uiState.selectedCitizen?.id,
+        tickProgress,
+      )
+    })
+  }, [])
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -118,9 +128,7 @@ function App() {
     return () => window.removeEventListener("wheel", handleWheel)
   }, [])
 
-  useActiveWindowTracking((event: ProductivityEvent) => {
-    addEvent(event)
-  })
+  useActiveWindowTracking(addEvent)
 
   // Productivité : charge depuis SQLite au démarrage (sans re-sauvegarder)
   useEffect(() => {
@@ -134,6 +142,10 @@ function App() {
     })
   }, [])
 
+  useEffect(() => {
+    listSaves().then(setSaves).catch(console.error)
+  }, [])
+
   return (
     <>
       <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
@@ -144,6 +156,49 @@ function App() {
         <button onClick={() => setBuildMode("residential")}>Build Residential</button>
         <button onClick={() => setBuildMode("commercial")}>Build Commercial</button>
         <button onClick={() => setBuildMode(null)}>Cancel</button>
+        <button onClick={togglePause}>  {sim.paused ? "▶ Play" : "⏸ Pause"}</button>
+        <button onClick={() => setSpeed(0.5)} style={{ fontWeight: sim.speed === 0.5 ? "bold" : "normal" }}>0.5x</button>
+        <button onClick={() => setSpeed(1)} style={{ fontWeight: sim.speed === 1 ? "bold" : "normal" }}>1x</button>
+        <button onClick={() => setSpeed(2)} style={{ fontWeight: sim.speed === 2 ? "bold" : "normal" }}>2x</button>
+        <button onClick={() => setSpeed(4)} style={{ fontWeight: sim.speed === 4 ? "bold" : "normal" }}>4x</button>
+
+        <input
+            value={saveName}
+            onChange={(e) => setSaveName(e.target.value)}
+            placeholder="Save name"
+            style={{ width: 100 }}
+          />
+          <button onClick={async () => {
+            if (!saveName) return
+            const data = serializeEngine(engine)
+            await saveSimulation(saveName, data)
+            setSaves(await listSaves())
+            setSaveName("")
+          }}>Save</button>
+
+          <button onClick={async () => {
+            const list = await listSaves()
+            setSaves(list)
+            setShowLoadMenu(!showLoadMenu)
+          }}>Load</button>
+
+          {showLoadMenu && (
+            <div style={{ position: "absolute", top: 40, left: 0, background: "#222", border: "1px solid #555", padding: 8 }}>
+              {saves.length === 0 && <div>No saves</div>}
+              {saves.map((s) => (
+                <div key={s.name}>
+                  <button onClick={async () => {
+                    const json = await loadSimulation(s.name)
+                    const data = deserializeEngine(json)
+                    engine.importState(data)
+                    tickSimulation()
+                    setShowLoadMenu(false)
+                  }}>{s.name}</button>
+                </div>
+              ))}
+            </div>
+          )}
+
         <button onClick={() => addEvent({
           id: crypto.randomUUID(),
           type: "distraction",

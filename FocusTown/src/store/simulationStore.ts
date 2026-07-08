@@ -33,6 +33,8 @@ export type SimulationState = {
     stressDelta: number
     burnoutDelta: number
   }
+  paused: boolean
+  speed: number
 }
 
 const initial = engine.getState()
@@ -41,6 +43,8 @@ export const useSimulationStore = create<SimulationState>(() => ({
   ...initial,
   productivitySummary: { ...initial.productivitySummary },
   productivityImpact: { ...initial.productivityImpact },
+  paused: false,
+  speed: 1,
 }))
 
 export function tickSimulation() {
@@ -56,27 +60,37 @@ const TICK_MS = 100
 let accumulator = 0
 let lastTime = 0
 let rafId: number | null = null
+let renderCallback: ((tickProgress: number) => void) | null = null
+
+export function setRenderCallback(cb: (tickProgress: number) => void) {
+  renderCallback = cb
+}
 
 function gameLoop(time: number) {
   const delta = time - lastTime
   lastTime = time
-  accumulator += delta
 
-  // Cap à 1s pour éviter un catch-up massif après un idle onglet
-  if (accumulator > TICK_MS * 10) {
-    accumulator = TICK_MS * 10
+  const state = useSimulationStore.getState()
+  if (!state.paused) {
+    accumulator += delta * state.speed
+
+    if (accumulator > TICK_MS * 10) {
+      accumulator = TICK_MS * 10
+    }
+
+    while (accumulator >= TICK_MS) {
+      const newState = engine.tick()
+      useSimulationStore.setState({
+        ...newState,
+        productivitySummary: { ...newState.productivitySummary },
+        productivityImpact: { ...newState.productivityImpact },
+      })
+      accumulator -= TICK_MS
+    }
   }
-
-  while (accumulator >= TICK_MS) {
-    const newState = engine.tick()
-    useSimulationStore.setState({
-      ...newState,
-      productivitySummary: { ...newState.productivitySummary },
-      productivityImpact: { ...newState.productivityImpact },
-    })
-    accumulator -= TICK_MS
+  if(renderCallback) {
+    renderCallback(accumulator / TICK_MS)
   }
-
   rafId = requestAnimationFrame(gameLoop)
 }
 
@@ -92,4 +106,12 @@ export function stopSimulation() {
     cancelAnimationFrame(rafId)
     rafId = null
   }
+}
+
+export function togglePause() {
+  useSimulationStore.setState((s) => ({ paused: !s.paused }))
+}
+
+export function setSpeed(speed: number) {
+  useSimulationStore.setState({ speed })
 }

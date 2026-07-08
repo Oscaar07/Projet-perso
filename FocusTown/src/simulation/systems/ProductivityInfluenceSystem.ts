@@ -1,3 +1,16 @@
+/**
+ * Pont entre les données de productivité réelle et la simulation.
+ *
+ * Ce système traduit les ratios de focus/distraction/idle de la journée
+ * en effets concrets sur les citoyens et l'économie de la ville :
+ *
+ * Focus ↗ : mood ↑, motivation ↑, stress ↓, burnout ↓, argent ↑
+ * Distraction ↗ : stress ↑, burnout ↑, mood ↓, argent ↓
+ * Idle : burnout ↑ (légèrement), argent ↓
+ *
+ * L'effet économique (cityMoneyDelta) est appliqué au niveau de la ville
+ * par SimulationEngine. Les effets sur les citoyens sont individuels.
+ */
 import {Citizen} from "../entities/Citizen"
 import {ProductivitySummary} from "../../productivity/types"
 
@@ -15,7 +28,6 @@ export class ProductivityInfluenceSystem {
         const distractionRatio = summary.distractionSeconds / summary.totalTrackedSeconds
         const idleRatio = summary.idleSeconds / summary.totalTrackedSeconds
 
-        // Money is the city-level signal; mood/stress are citizen-level signals.
         let cityMoneyDelta = 0
 
         cityMoneyDelta += focusRatio * 10
@@ -23,7 +35,6 @@ export class ProductivityInfluenceSystem {
         cityMoneyDelta -= idleRatio * 3
 
         citizens.forEach((citizen) => {
-            // Focus sessions stabilize the population; distractions push stress upward.
             citizen.mood += focusRatio * 0.2
             citizen.motivation += focusRatio * 0.2
             citizen.stress -= focusRatio * 0.25

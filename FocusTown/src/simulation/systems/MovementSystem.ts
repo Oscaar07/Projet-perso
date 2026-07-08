@@ -1,41 +1,54 @@
+/**
+ * Exécute le déplacement des citoyens sur la grille discrète.
+ *
+ * Chaque tick, les citoyens qui ont un chemin (path[]) non vide avancent
+ * d'exactement une case. Le système met à jour :
+ * - movingTicks : compteur de ticks passés à se déplacer (utilisé pour le
+ *   lock Pokémon-style et l'interpolation visuelle)
+ * - facingDirection : orientation du sprite pour l'affichage
+ * - prevX/prevY : position avant déplacement (interpolation rendu)
+ * - occupancy : grille d'occupation pour le pathfinding
+ *
+ * Le mouvement est tile-par-tile : pas de déplacement fractionnaire.
+ * L'interpolation fluide est gérée côté rendu via tickProgress.
+ */
 import { Citizen } from "../entities/Citizen"
 import { PathfindingGrid } from "./PathfindingGrid";
 
 export class MovementSystem {
-  private previousPositions = new Map<string, {x : number, y: number}>()
+  update(citizens: Citizen[], grid: PathfindingGrid) {
+    for (const citizen of citizens) {
+      // Sécurité anti-dérive : les positions doivent toujours être entières
+      // car le mouvement est purement grid-based. Une valeur fractionnaire
+      // pourrait venir d'un bug de sauvegarde/restauration.
+      citizen.x = Math.round(citizen.x)
+      citizen.y = Math.round(citizen.y)
 
-  update(citizens: Citizen[], grid : PathfindingGrid) {
-    for(const citizen of citizens) {
-      if (citizen.path.length === 0) continue
+      if (citizen.path.length > 0) {
+        citizen.movingTicks++
 
-      const prev = this.previousPositions.get(citizen.id)
-      const prevTileX = prev ? Math.floor(prev.x) : Math.floor(citizen.x)
-      const prevTileY = prev ? Math.floor(prev.y) : Math.floor(citizen.y)
+        // Détermine la direction visuelle en comparant la prochaine case
+        // avec la position actuelle. Ordre de priorité : X puis Y.
+        const next = citizen.path[0]
+        if (next.x > citizen.x) citizen.facingDirection = "right"
+        else if (next.x < citizen.x) citizen.facingDirection = "left"
+        else if (next.y > citizen.y) citizen.facingDirection = "down"
+        else if (next.y < citizen.y) citizen.facingDirection = "up"
 
-      this.previousPositions.set(citizen.id, {x : citizen.x, y : citizen.y})
+        citizen.prevX = citizen.x
+        citizen.prevY = citizen.y
 
-      const next = citizen.path[0]
-      const dx = next.x - citizen.x
-      const dy = next.y - citizen.y
-      const speed = 0.05
-
-      if (Math.abs(dx) > 0.1) {
-        citizen.x += dx > 0 ? speed : -speed
-      }
-      if (Math.abs(dy) > 0.1) {
-        citizen.y += dy > 0 ? speed : -speed
-      }
-      if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1) {
+        citizen.x = next.x
+        citizen.y = next.y
         citizen.path.shift()
-      }
 
-      const newTileX = Math.floor(citizen.x)
-      const newTileY = Math.floor(citizen.y)
-      if (newTileX !== prevTileX || newTileY !== prevTileY) {
-        grid.vacate(prevTileX, prevTileY)
-        grid.occupy(newTileX, newTileY)
+        // Met à jour la grille pour le pathfinding des autres citoyens
+        // (évite que deux citoyens occupent la même case simultanément)
+        grid.vacate(Math.floor(citizen.prevX), Math.floor(citizen.prevY))
+        grid.occupy(next.x, next.y)
+      } else {
+        citizen.movingTicks = 0
       }
-      
     }
   }
 }

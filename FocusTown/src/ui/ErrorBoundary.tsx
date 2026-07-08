@@ -6,7 +6,7 @@ type State = {
 }
 
 export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, State> {
-  constructor(props: any) {
+  constructor(props: React.PropsWithChildren<{}>) {
     super(props)
     this.state = { hasError: false, error: null }
   }
@@ -15,7 +15,7 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren<{}>, 
     return { hasError: true, error }
   }
 
-  componentDidCatch(error: Error, info: any) {
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
     // you could log to an external service here
     console.error("Uncaught error in component tree:", error, info)
   }

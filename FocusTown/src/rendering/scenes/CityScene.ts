@@ -1,4 +1,20 @@
-import { Application, Graphics, Container } from "pixi.js"
+/**
+ * Scène de rendu principale avec PixiJS.
+ *
+ * Gère l'affichage de la carte (tiles), des bâtiments, des citoyens
+ * (cercles colorés), des overlays météo et du mode construction.
+ *
+ * Le rendu utilise trois containers séparés (tiles, bâtiments, entités)
+ * pour un tri efficace. La caméra supporte le zoom (molette) et le
+ * déplacement par cliquer-glisser.
+ *
+ * Le mode construction overlay des tiles fantômes et valide les
+ * placements en temps réel avant envoi au moteur de simulation.
+ *
+ * L'interpolation de mouvement utilise tickProgress (0..1) fourni par
+ * le frontend pour lisser le déplacement entre deux positions grille.
+ */
+import { Application, Graphics, Container, FederatedPointerEvent } from "pixi.js"
 import { Citizen } from "../../simulation/entities/Citizen"
 import { WORLD_HEIGHT, WORLD_WIDTH, TILE_SIZE } from "../../simulation/config/worldConfig"
 import { Building } from "../../simulation/entities/Building"
@@ -35,13 +51,11 @@ export class CityScene {
     // The stage captures pointer input once and forwards it to the current build mode.
     this.app.stage.eventMode = "static"
     this.app.stage.hitArea = this.app.screen
-    this.app.stage.on("pointerdown", () => {
+    this.app.stage.on("pointerdown", (e: FederatedPointerEvent) => {
       this.isDragging = true
       this.lastDraggedX = null
       this.lastDraggedY = null
-    })
-    // also place initial tile when pointerdown on the stage (for drags started off a graphic)
-    this.app.stage.on("pointerdown", (e: any) => {
+
       if (this.buildMode !== "road") return
       const global = e.data.global
       const worldX = (global.x - this.worldContainer.x) / this.camaraZoom
@@ -59,8 +73,7 @@ export class CityScene {
       this.lastDraggedY = null
     })
 
-    // When dragging, track pointer movement and place roads while moving
-    this.app.stage.on("pointermove", (e: any) => {
+    this.app.stage.on("pointermove", (e: FederatedPointerEvent) => {
       const global = e.data.global
       // transform screen coords to world coords (account for camera and zoom)
       const worldX = (global.x - this.worldContainer.x) / this.camaraZoom
@@ -113,6 +126,7 @@ export class CityScene {
     timeOfDay: string,
     weather: Weather,
     selectedCitizenId?: string | number | null,
+    tickProgress = 1,
   ) {
     this.entityContainer.removeChildren()
 
@@ -121,25 +135,35 @@ export class CityScene {
       graphics.eventMode = "static";
       graphics.cursor = "pointer";
 
-      graphics.circle(
-        citizen.x * TILE_SIZE + TILE_SIZE / 2,
-        citizen.y * TILE_SIZE + TILE_SIZE / 2,
-        8
-      )
+      const renderX = citizen.prevX + (citizen.x - citizen.prevX) * tickProgress
+      const renderY = citizen.prevY + (citizen.y - citizen.prevY) * tickProgress
+      const cx = renderX * TILE_SIZE + TILE_SIZE / 2
+      const cy = renderY * TILE_SIZE + TILE_SIZE / 2
 
+      // Cercle (corps du citizen)
+      graphics.circle(cx, cy, 8)
+
+      // Couleur selon émotion (inchangé)
       if (citizen.emotionalState === "happy") {
         graphics.fill(0x00ff00)
-      
-      } else if (citizen.emotionalState ==="sad") {
+      } else if (citizen.emotionalState === "sad") {
         graphics.fill(0x3498db)
-      
-      } else if (citizen.emotionalState ==="burnout") {
+      } else if (citizen.emotionalState === "burnout") {
         graphics.fill(0xff0000)
-      
       } else if (citizen.emotionalState === "anxious") {
         graphics.fill(0xffff00)
-      
       } else {
+        graphics.fill(0xffffff)
+      }
+
+      // Nez : petit cercle blanc dans la direction du mouvement
+      const dx = citizen.x - citizen.prevX
+      const dy = citizen.y - citizen.prevY
+      const len = Math.sqrt(dx * dx + dy * dy)
+      if (len > 0.001) {
+        const nx = (dx / len) * 5  // normalisé * 5px
+        const ny = (dy / len) * 5
+        graphics.circle(cx + nx, cy + ny, 3)
         graphics.fill(0xffffff)
       }
 
@@ -148,7 +172,7 @@ export class CityScene {
       })
 
       if (selectedCitizenId != null && citizen.id === selectedCitizenId.toString()) {
-        graphics.stroke({width: 3, color: 0xffff00})
+        graphics.stroke({ width: 3, color: 0xffff00 })
       }
 
       this.entityContainer.addChild(graphics)
@@ -269,21 +293,22 @@ export class CityScene {
       const x = tile.x * TILE_SIZE
       const y = tile.y * TILE_SIZE
 
-      if (tile.zoneType === "residential") {
-        g.beginFill(0x3498db, 0.5)
-      } else if (tile.zoneType === "commercial") {
-        g.beginFill(0xf1c40f, 0.5)
-      } else if (tile.type === "grass") {
-        g.beginFill(0x2ecc71, 1)
+      g.rect(x, y, TILE_SIZE, TILE_SIZE)
+      if (tile.type === "grass") {
+        g.fill({ color: 0x2ecc71 })
       } else if (tile.type === "road") {
-        g.beginFill(0x555555, 1)
+        g.fill({ color: 0x555555 })
       } else {
-        g.beginFill(0x222222, 1)
+        g.fill({ color: 0x222222 })
       }
 
-      g.lineStyle(1, 0x222222)
-      g.drawRect(x, y, TILE_SIZE, TILE_SIZE)
-      g.endFill()
+      if (tile.zoneType === "residential") {
+        g.stroke({ width: 3, color: 0x3498db })
+      } else if (tile.zoneType === "commercial") {
+        g.stroke({ width: 3, color: 0xf1c40f })
+      } else {
+        g.stroke({ width: 1, color: 0x222222 })
+      }
 
       g.on("pointerover", () => {
         this.hoverTileX = tile.x
@@ -291,11 +316,22 @@ export class CityScene {
       })
 
       g.on("pointerdown", () => {
-        g.alpha = 0.5
         this.onTileClick?.(tile.x, tile.y)
       })
 
       this.tileContainer.addChild(g)
+
+      if (tile.zoneType === "residential") {
+        const dot = new Graphics()
+        dot.circle(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 3)
+        dot.fill({ color: 0x3498db })
+        this.tileContainer.addChild(dot)
+      } else if (tile.zoneType === "commercial") {
+        const dot = new Graphics()
+        dot.circle(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 3)
+        dot.fill({ color: 0xf1c40f })
+        this.tileContainer.addChild(dot)
+      }
     })
   }
 
@@ -307,19 +343,32 @@ export class CityScene {
       g.eventMode = "static"
       g.cursor = "pointer"
 
-      g.rect(
-        building.x * TILE_SIZE,
-        building.y * TILE_SIZE,
-        TILE_SIZE,
-        TILE_SIZE
-      )
+      const x = building.x * TILE_SIZE
+      const y = building.y * TILE_SIZE
 
       if (building.type === "house") {
+        g.rect(x + 2, y + 6, TILE_SIZE - 4, TILE_SIZE - 6)
         g.fill(0x3498db)
+        g.moveTo(x + TILE_SIZE / 2, y + 1)
+        g.lineTo(x + TILE_SIZE - 1, y + 7)
+        g.lineTo(x + 1, y + 7)
+        g.closePath()
+        g.fill(0x2980b9)
       } else if (building.type === "office") {
+        g.rect(x + 1, y + 4, TILE_SIZE - 2, TILE_SIZE - 4)
         g.fill(0xe74c3c)
+        g.rect(x + 3, y + 0, TILE_SIZE - 6, 5)
+        g.fill(0xc0392b)
       } else if (building.type === "restaurant") {
+        g.rect(x + 2, y + 6, TILE_SIZE - 4, TILE_SIZE - 6)
         g.fill(0xf1c40f)
+        g.moveTo(x + TILE_SIZE / 2, y + 1)
+        g.lineTo(x + TILE_SIZE - 1, y + 7)
+        g.lineTo(x + 1, y + 7)
+        g.closePath()
+        g.fill(0xe67e22)
+        g.circle(x + TILE_SIZE / 2, y + TILE_SIZE / 2 + 3, 3)
+        g.fill(0xffffff)
       }
 
       g.on("pointerdown", () => {
@@ -327,7 +376,7 @@ export class CityScene {
       })
 
       if (selectedBuildingId != null && building.id === selectedBuildingId.toString()) {
-        g.stroke({width: 3, color: 0xffff00})
+        g.stroke({ width: 3, color: 0xffff00 })
       }
 
       this.buildingContainer.addChild(g)

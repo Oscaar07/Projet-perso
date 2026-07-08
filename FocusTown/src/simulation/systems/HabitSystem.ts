@@ -1,3 +1,17 @@
+/**
+ * Système de renforcement des habitudes.
+ *
+ * Chaque fois qu'un citoyen fait une action, l'habitude correspondante
+ * est renforcée (+0.05). Les habitudes non utilisées décroissent
+ * progressivement (*0.999 par tick, soit ~0.37% de decay).
+ *
+ * Les habitudes influencent la procrastination :
+ * - Trop de relaxation (relax > 70) → procrastination augmente
+ * - Habitude de travail solide (work > 60) → procrastination diminue
+ *
+ * UtilityAI utilise les scores d'habitude pour favoriser les actions
+ * familières (biais de routine).
+ */
 import { Citizen } from "../entities/Citizen"
 
 export class HabitSystem {
@@ -28,6 +42,7 @@ export class HabitSystem {
             citizen.procrastination -= 0.05
         }
 
+        // Decay progressif des habitudes inutilisées
         citizen.habits.work *= 0.999
         citizen.habits.relax *= 0.999
         citizen.habits.socialize *= 0.999

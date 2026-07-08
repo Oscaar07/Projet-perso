@@ -1,3 +1,17 @@
+/**
+ * Pathfinding A* pour les déplacements des citoyens.
+ *
+ * Chaque tick, pour chaque citoyen qui n'a pas de chemin en cours,
+ * calcule le chemin le plus court de sa position actuelle à sa cible.
+ * Utilise une heuristique Manhattan (distance en grille) avec pénalités
+ * d'occupation via PathfindingGrid.getEffectiveCost().
+ *
+ * L'exploration est limitée à PATHFINDING_MAX_TIER itérations pour
+ * éviter les blocages infinis sur les grandes cartes.
+ *
+ * Le chemin retourné est une liste de {x, y} que MovementSystem
+ * consomme case par case au fil des ticks.
+ */
 import { Citizen } from "../entities/Citizen"
 import { PathfindingGrid } from "./PathfindingGrid"
 import { PATHFINDING_MAX_TIER } from "../config/worldConfig"
@@ -27,7 +41,7 @@ export class PathfindingSystem {
     ex: number, ey: number,
     grid: PathfindingGrid
   ): { x: number; y: number }[] {
-    const openSet: { x: number; y: number; g: number; f: number }[] = [{ x: sx, y: sy, g: 0, f: this.heuristique(sx, sy, ex, ey) }]
+    const openSet: { x: number; y: number; g: number; f: number }[] = [{ x: sx, y: sy, g: 0, f: this.heuristic(sx, sy, ex, ey) }]
     const cameFrom = new Map<string, { x: number; y: number }>()
     const gScore = new Map<string, number>()
     gScore.set(`${sx},${sy}`, 0)
@@ -37,6 +51,8 @@ export class PathfindingSystem {
     while (openSet.length > 0 && iterations < PATHFINDING_MAX_TIER) {
       iterations++
 
+      // Sélection du nœud avec le score f le plus bas (tas linéaire
+      // suffisant pour les grilles de taille modeste)
       let lowest = 0
       for (let i = 1; i < openSet.length; i++) {
         if (openSet[i].f < openSet[lowest].f) lowest = i
@@ -50,6 +66,7 @@ export class PathfindingSystem {
 
       visited.add(key)
 
+      // Voisins dans les 4 directions cardinales
       const neighbors = [
         { x: current.x, y: current.y - 1 },
         { x: current.x, y: current.y + 1 },
@@ -71,7 +88,7 @@ export class PathfindingSystem {
 
         cameFrom.set(nbKey, { x: current.x, y: current.y })
         gScore.set(nbKey, tentativeG)
-        const h = this.heuristique(nb.x, nb.y, ex, ey)
+        const h = this.heuristic(nb.x, nb.y, ex, ey)
         openSet.push({ x: nb.x, y: nb.y, g: tentativeG, f: tentativeG + h })
       }
     }
@@ -79,7 +96,8 @@ export class PathfindingSystem {
     return []
   }
 
-  private heuristique(x1: number, y1: number, x2: number, y2: number): number {
+  /** Heuristique Manhattan : distance absolue en grille */
+  private heuristic(x1: number, y1: number, x2: number, y2: number): number {
     return Math.abs(x1 - x2) + Math.abs(y1 - y2)
   }
 

@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { listen } from "@tauri-apps/api/event"
 import { ProductivityEvent } from "../productivity/types"
 
@@ -13,6 +13,9 @@ export type TrackingEventPayload = {
 export function useActiveWindowTracking(
   onEvent: (event: ProductivityEvent) => void
 ) {
+  const onEventRef = useRef(onEvent)
+  onEventRef.current = onEvent
+
   useEffect(() => {
     let previousEvent: TrackingEventPayload | null = null
     let sessionStart = Date.now()
@@ -37,7 +40,7 @@ export function useActiveWindowTracking(
               previousEvent.eventType === "break" ? 70 :
               previousEvent.eventType === "distraction" ? 20 : 50,
           }
-          onEvent(productivityEvent)
+          onEventRef.current(productivityEvent)
         }
 
         previousEvent = ev
@@ -49,5 +52,5 @@ export function useActiveWindowTracking(
 
     const unlistenPromise = setup()
     return () => { unlistenPromise.then(fn => fn()) }
-  }, [onEvent])
+  }, [])
 }

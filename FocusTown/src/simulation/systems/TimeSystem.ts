@@ -1,5 +1,18 @@
-// simulation/systems/TimeSystem.ts
-
+/**
+ * Gère le cycle jour/nuit et la météo.
+ *
+ * Le temps avance de 0.1h par tick (soit 10 ticks par heure simulée).
+ * Un cycle jour complet dure 240 ticks.
+ *
+ * La météo change chaque jour avec des probabilités :
+ * - sunny 60% (effet positif sur le mood)
+ * - rain  20% (effet négatif)
+ * - fog   15%
+ * - storm  5%
+ *
+ * Les effets météo sont appliqués par NeedsSystem et l'affichage
+ * par le rendu (overlays visuels).
+ */
 import { Weather } from "../world/Weather"
 
 export class TimeSystem {

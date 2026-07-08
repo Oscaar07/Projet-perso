@@ -1,3 +1,12 @@
+/**
+ * Effets de lieu : régénération passive selon la position du citoyen.
+ *
+ * - À la maison → energy +0.1/tick (repos)
+ * - Au restaurant → hunger +0.2/tick (repas)
+ *
+ * Ces effets s'ajoutent à la décroissance gérée par NeedsSystem, créant
+ * un équilibre dynamique entre les lieux.
+ */
 import { Citizen } from "../entities/Citizen"
 
 export class LocationEffectSystem {

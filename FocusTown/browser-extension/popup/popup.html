@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { width: 200px; font-family: system-ui, sans-serif; padding: 12px; margin: 0; }
+    .status { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.on { background: #00cc66; }
+    .dot.off { background: #ff4444; }
+    .domain { font-size: 12px; color: #666; margin: 4px 0; }
+    .title { font-size: 14px; font-weight: 500; margin: 0 0 4px 0; }
+    hr { border: none; border-top: 1px solid #eee; margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <div class="status">
+    <span class="dot" id="dot"></span>
+    <span id="statusText">Connecting...</span>
+  </div>
+  <hr>
+  <div id="currentTab">
+    <div class="title" id="tabTitle">-</div>
+    <div class="domain" id="tabDomain">-</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
