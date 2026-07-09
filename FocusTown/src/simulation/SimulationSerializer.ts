@@ -23,6 +23,15 @@ export interface SimulationSaveData {
   citizens: Citizen[]
   buildings: Building[]
   tiles: Tile[]
+  recentDeaths: { citizenId: string; name: string; cause: string; age: number; day: number; job: string}[]
+  activeEvent: {
+    type: string
+    title: string
+    icon: string
+    description: string
+    remainingTicks: number
+    totalDuration: number
+  } | null
 }
 
 export function serializeEngine(engine: SimulationEngine): string {

@@ -68,6 +68,9 @@ import { Memory } from "../simulation/ai/Memory"
               Name: {" "} {selectedCitizen.name}
             </div>  
             <div>
+              Age: {" "} {selectedCitizen.age} ticks ({selectedCitizen.lifeStage})
+            </div>
+            <div>
               Energy: {" "} {selectedCitizen.energy.toFixed(0)}
             </div>
             <div>
@@ -186,6 +189,38 @@ import { Memory } from "../simulation/ai/Memory"
             No citizen selected
           </div>
           
+        )}
+
+        <hr />
+        <h3>Recent Deaths</h3>
+        {simulationState.recentDeaths?.length > 0 ? (
+          simulationState.recentDeaths.slice(0, 5).map((d, i) => (
+            <div key={i} style={{ fontSize: 12, marginBottom: 4 }}>
+              {d.name} ({d.job}) — {d.cause} at day {d.day}
+            </div>
+          ))
+        ) : (
+          <div style={{ fontSize: 12 }}>None</div>
+        )}
+
+        {simulationState.activeEvent && (
+          <div style={{
+            background: "#2a2a2a",
+            padding: "10px",
+            borderRadius: "8px",
+            marginBottom: "10px",
+            border: "2px solid #ff8800"
+          }}>
+            <h3 style={{ margin: 0, color: "#ffaa00" }}>
+              {simulationState.activeEvent.icon} {simulationState.activeEvent.title}
+            </h3>
+            <div style={{ fontSize: 13, marginTop: 6 }}>
+              {simulationState.activeEvent.description}
+            </div>
+            <div style={{ fontSize: 11, color: "#aaa", marginTop: 4 }}>
+              {simulationState.activeEvent.remainingTicks} ticks remaining
+            </div>
+          </div>
         )}
 
         <hr />

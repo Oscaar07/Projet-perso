@@ -30,6 +30,12 @@ export interface Relationship {
 export type Citizen = {
     id: string;
     name: string;
+    birthTick: number;
+    age: number;
+    lifeStage: "child" | "adult" | "elder";
+    isAlive: boolean;
+    deathTick?: number;
+    deathCause?: string;
 
     // Position grille (discrète, entière) et position précédente
     // pour interpolation du rendu.

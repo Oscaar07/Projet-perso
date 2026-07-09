@@ -132,7 +132,6 @@ Each citizen contains:
 
 * hunger
 * energy
-* mood
 * hygiene
 * fun
 * money
@@ -142,22 +141,24 @@ Each citizen contains:
 
 ## Personality Traits
 
-* diligence
-* sociability
-* laziness
+* diligence (personality)
+* sociability (personality)
+* laziness (personality)
 * discipline
 * confidence
-* anxiety
 * perfectionism
+* anxiety
 
 ---
 
 ## Psychological Systems
 
+* mood
 * stress
 * burnout
 * procrastination
 * motivation
+* anxiety
 * emotional states (happy, neutral, sad, anxious, burnout)
 * behavioral routines
 
@@ -364,7 +365,7 @@ Zones can automatically generate buildings over time.
 
 Includes:
 
-* day/night cycle with visual tinting (night=dark blue, evening=orange, morning=yellow)
+* day/night cycle with visual tinting (night=dark blue, evening=orange, day/morning=yellow, or no tint for day phase)
 * weather simulation
 * chronotypes (morning/night)
 * schedules
@@ -465,12 +466,13 @@ This forms the foundation for future real-world productivity integration.
 
 A dedicated system (`ProductivityInfluenceSystem`) maps real-world focus/distraction ratios into the simulation:
 
-| Real Behavior    | Simulation Effect                          |
-| ---------------- | ------------------------------------------ |
-| Focus session    | Citizen mood ↑, stress ↓, motivation ↑ |
-| Distraction      | Citizen stress ↑, burnout ↑, city money ↓ |
-| Idle             | City money ↓                            |
-| Break            | Slight positive effect                  |
+| Real Behavior                      | Simulation Effect                          |
+| ---------------------------------- | ------------------------------------------ |
+| Focus session                      | Citizen mood ↑, stress ↓, motivation ↑ |
+| Distraction                        | Citizen stress ↑, burnout ↑, city money ↓ |
+| Idle                               | City money ↓                            |
+| Productivity score < 40 (low)      | Citizen stress ↑, burnout ↑             |
+| Productivity score > 75 (high)     | Citizen stress ↓, motivation ↑          |
 
 ---
 
@@ -518,18 +520,18 @@ src/
 
 src-tauri/
 └── src/
-    ├── commands/       # Tauri IPC commands: tracking, events, reports, simulation save/load, classifier config, extension status
+    ├── commands/       # Tauri IPC commands: tracking, simulation save/load, classifier config, extension status, database
     │   ├── mod.rs
     │   ├── tracking.rs
-    │   ├── reports.rs
     │   ├── simulation.rs
+    │   ├── database.rs # daily reports, event queries
     │   └── config.rs   # get_classifier_config, set_classifier_config, get_extension_status
     ├── tracking/       # Windows API active window detection + idle detection + classification + input tracking
     │   ├── tracker.rs
     │   ├── classifier.rs   # ClassifierConfig, classify() with configurable domains
     │   └── input.rs        # Global keyboard/mouse listener via rdev
     ├── network/        # WebSocket server for browser extension
-    │   └── mod.rs      # ws://127.0.0.1:9736 — receives URL events, forwards to Tauri
+    │   └── mod.rs      # ws://127.0.0.1:9736 — receives URL events, classifies, forwards to Tauri via emit
     ├── database/       # SQLite connection, schema, models, queries
     │   ├── db.rs       # Includes app_config table init, load_classifier_config()
     │   ├── models.rs
@@ -584,29 +586,28 @@ Examples:
 
 ### systems/
 
-20 independent simulation systems executed in order each tick:
+20 independent simulation systems executed in dependency order each tick:
 
 1. TimeSystem — day/night cycle, weather progression
-2. ScheduleSystem — chronotype-based work/sleep schedules
-3. ActionTargetSystem — UtilityAI → target assignment
-4. PathfindingSystem — A* with traffic-aware routing
-5. MovementSystem — path following with occupancy tracking
-6. LocationEffectSystem — home/restaurant effects
-7. NeedsSystem — hunger, energy, mood, hygiene, fun, stress decay
-8. EmotionSystem — emotional state machine
-9. MemorySystem — memory creation + pruning
-10. HabitSystem — habit reinforcement/decay
-11. ProcrastinationSystem — procrastination/burnout mechanics
-12. HealthSystem — health/sickness
-13. HousingSystem — home comfort/cleanliness effects
-14. JobSystem — per-job salary and energy/mood effects
+2. MemorySystem — memory creation + pruning
+3. ScheduleSystem — chronotype-based work/sleep schedules
+4. ActionTargetSystem — UtilityAI → target assignment
+5. HabitSystem — habit reinforcement/decay
+6. ProcrastinationSystem — procrastination/burnout mechanics
+7. PathfindingSystem — A* with traffic-aware routing
+8. MovementSystem — path following with occupancy tracking
+9. LocationEffectSystem — home/restaurant effects
+10. NeedsSystem — hunger, energy, hygiene, fun, stress decay
+11. EmotionSystem — emotional state machine
+12. ProductivityInfluenceSystem — real productivity → simulation bridge
+13. HealthSystem — health/sickness
+14. HousingSystem — home comfort/cleanliness effects
 15. EconomySystem — money, spending, salaries
 16. SocialSystem — friendships, emotional contagion, social decay
-17. PopulationSystem — spawning, housing demand, growth
-18. CityFinanceSystem — taxes, building upkeep, bankruptcy
+17. JobSystem — per-job salary and energy/mood effects
+18. PopulationSystem — spawning, housing demand, growth
 19. ConstructionSystem — build, road, zone, auto-build
-20. ProductivityInfluenceSystem — real productivity → simulation bridge
-21. PathfindingGrid — traffic grid utility for pathfinding
+20. CityFinanceSystem — taxes, building upkeep, bankruptcy
 
 ---
 
@@ -690,12 +691,12 @@ Responsible for selecting the best action for a citizen.
 
 Inputs:
 
-* needs
-* emotions
+* needs (energy, hunger, fun)
+* personality traits (diligence, sociability, laziness)
+* habits (work, relax, socialize, wander)
+* stress, mood, motivation
+* workDesire, sleepDesire
 * memories
-* routines
-* personality
-* stress
 
 Outputs:
 
@@ -745,9 +746,10 @@ Updates:
 
 * hunger
 * energy
-* mood
 * hygiene
+* fun
 * stress
+* motivation
 
 ---
 
@@ -778,10 +780,8 @@ Handles:
 
 Stores:
 
-* emotional memories
-* positive experiences
-* negative experiences
-* work stress
+* social memories (positive, when mood > 80)
+* work memories (negative, when stress > 80)
 
 Memories influence future decisions.
 
@@ -888,7 +888,7 @@ Rendering:
 * visualizes state only
 
 Movement interpolation uses `tickProgress` (0..1) for smooth grid-to-grid transitions.
-Sprite loading pipeline is planned but not yet implemented.
+Sprites are not yet implemented — citizens render as colored circles with emotion-based coloring.
 
 Benefits:
 
@@ -936,6 +936,7 @@ Current:
 Planned:
 
 * PostgreSQL (optional cloud sync)
+* time-series bucketing for advanced analytics
 
 ---
 
@@ -1070,13 +1071,13 @@ Simulation behavior should remain:
 
 Current prototype limitations:
 
-* no ECS implementation yet (traditional OOP with modular systems)
+* no ECS implementation (flat entity types with modular systems)
 * limited optimization for 1000+ citizens
-* browser extension exists but needs manual installation — not yet distributed
+* browser extension exists and connects via WebSocket but needs manual installation — not yet distributed
 * no sprite loading pipeline (SpriteLoader not implemented)
 * citizen rendering uses colored circles (no sprites yet)
 * no sound
-* test suite: 211 tests across 26 files covering all 15 simulation systems
+* test suite: 222 tests across 28 files covering all 20 simulation systems + lifecycle + narrative director
 * no cloud sync or cross-device support
 
 ---
@@ -1085,9 +1086,9 @@ Current prototype limitations:
 
 # Simulation — Backend
 
-* citizen lifecycle (aging → death, emigration, replacement cycle)
+* [x] citizen lifecycle (aging → death → replacement cycle)
 * education & career specialization system
-* events & crises (natural disasters, epidemics, recessions)
+* [x] events & crises (fire, epidemic, festival, recession) via NarrativeDirector
 * infrastructure basics (electricity, water, garbage)
 * crime & policing system
 * performance optimization for 1000+ citizens
@@ -1106,9 +1107,10 @@ Current prototype limitations:
 
 # Rendering
 
+* sprite loading pipeline (SpriteLoader, CitizenSpritesheet)
+* actual spritesheet assets
 * add animations
-* improve sprites
-* optimize rendering
+* particle effects
 
 ---
 
@@ -1139,17 +1141,17 @@ Long-term targets:
 
 ---
 
-# Planned Save System
+# Save System
 
-Future saves should persist:
+The simulation save system persists:
 
-* city state
-* citizens
-* memories
-* relationships
-* economy
-* analytics
-* productivity data
+* city state (tiles, buildings, cityMoney, time, weather)
+* citizens (needs, psychology, personality, memories, relationships)
+* economy (jobs, money, habits)
+* analytics (productivity summary)
+* named saves with load/delete via Tauri + SQLite
+* recent deaths log
+* active city event state
 
 ---
 
@@ -1317,15 +1319,15 @@ Inspired by:
 
 ## Families & Citizen Lifecycle
 
-* [ ] Age tracking (birth tick, life stages)
+* [x] Age tracking (birth tick, life stages)
+* [x] Death (natural, accident, health < 0)
+* [x] Replacement cycle (population system auto-fills vacancies)
 * [ ] Children (spawn, growth, education)
 * [ ] Education system (schools, skill progression, career access)
 * [ ] Career specialization (education level unlocks better jobs)
 * [ ] Couples & marriage
 * [ ] Aging (stat decay, retirement)
-* [ ] Death (natural, accident, health < 0)
 * [ ] Emigration (unhappiness, economic factors)
-* [ ] Replacement cycle (new citizens to fill vacancies)
 
 ## Social Structures
 
@@ -1372,12 +1374,13 @@ Inspired by:
 
 ## Emergence
 
-* [ ] Economic crises (recessions, inflation, market crashes)
+* [x] Economic crises (recession event)
+* [x] Natural disasters (fire event)
+* [x] Epidemics (contagious illness event)
+* [x] Positive events (festival boosts morale)
 * [ ] Burnout epidemics (contagious stress spirals)
 * [ ] Social collapse (mass emigration, abandonment)
 * [ ] Productivity booms (innovation eras)
-* [ ] Natural disasters (fire, flood, earthquake)
-* [ ] Epidemics (contagious illness spreading through proximity)
 
 ---
 

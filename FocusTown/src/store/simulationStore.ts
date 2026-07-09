@@ -35,6 +35,14 @@ export type SimulationState = {
   }
   paused: boolean
   speed: number
+  activeEvent: {
+    type: string
+    title: string
+    icon: string
+    description: string
+    remainingTicks: number
+    totalDuration: number
+  } | null
 }
 
 const initial = engine.getState()

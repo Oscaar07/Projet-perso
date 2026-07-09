@@ -28,6 +28,8 @@ import { ConstructionSystem } from "../systems/ConstructionSystem"
 import { LocationEffectSystem } from "../systems/LocationEffectSystem"
 import { WorldGenerator } from "../world/WorldGenerator"
 import { SimulationSaveData } from "../SimulationSerializer"
+import { LifecycleSystem, DeathRecord } from "../systems/LifecycleSystem"
+import { NarrativeDirector, ActiveEvent } from "../systems/NarrativeDirector" 
 
 export class SimulationEngine {
   private tickCount = 0
@@ -83,6 +85,12 @@ export class SimulationEngine {
     burnoutDelta: 0,
   }
 
+  private lifecycleSystem = new LifecycleSystem()
+  recentDeaths: DeathRecord[]= []
+
+  private narrativeDirector = new NarrativeDirector()
+  activeEvent: ActiveEvent | null = null
+
   constructor() {
     // Build the initial world once, then spawn citizens from the generated map.
     this.tiles = this.worldGenerator.generate();
@@ -101,13 +109,14 @@ export class SimulationEngine {
         const office = offices[Math.floor(Math.random() * offices.length)]
         const restaurant = restaurants[Math.floor(Math.random() * restaurants.length)]
 
-        this.citizens.push(createCitizen({
+        const newCitizen = createCitizen({
           name: `Citizen ${i + 1}`,
           home,
           workplace: office,
           restaurant,
-          }
-        ))
+        })
+        newCitizen.birthTick = this.tickCount
+        this.citizens.push(newCitizen)
       }
     }
   }
@@ -153,6 +162,21 @@ export class SimulationEngine {
     this.jobSystem.update(this.citizens)
     this.populationSystem.update(this.citizens, this.buildings, this.populationCap, this.residentialDemand)
 
+    const { aliveCitizens, deaths } = this.lifecycleSystem.update(this.citizens, this.tickCount, this.day)
+    this.recentDeaths = [...deaths, ...this.recentDeaths].slice(0, 10)
+    this.citizens = aliveCitizens
+
+    const prevBuildingsLen = this.buildings.length
+    const narrativeResult = this.narrativeDirector.update(this.citizens, this.buildings, this.weather, this.cityMoney, this.tickCount, this.day)
+    this.citizens = narrativeResult.citizens
+    this.buildings = narrativeResult.buildings
+    this.cityMoney = narrativeResult.cityMoney
+    this.activeEvent = narrativeResult.activeEvent
+    if (this.buildings.length !== prevBuildingsLen) {
+      this.buildingsChanged = true
+      this.pathfindingGrid.rebuild(this.tiles, this.buildings)
+    }
+
     // Construction can mutate both tiles and buildings, so it runs before finance closes the tick.
     const prevBuildLen = this.buildings.length
     const constructionState = this.constructionSystem.autoBuildZones({ tiles: this.tiles, buildings: this.buildings, cityMoney: this.cityMoney })
@@ -183,6 +207,7 @@ export class SimulationEngine {
         residentialDemand: this.residentialDemand,
         productivitySummary: this.productivitySummary,
         productivityImpact: this.productivityImpact,
+        activeEvent: this.activeEvent,
     }
   }
   
@@ -213,6 +238,7 @@ export class SimulationEngine {
       residentialDemand: this.residentialDemand,
       productivitySummary: this.productivitySummary,
       productivityImpact: this.productivityImpact,
+      activeEvent: this.activeEvent,
     }
   }
 
@@ -289,6 +315,8 @@ export class SimulationEngine {
       citizens: this.citizens.map(c => ({ ...c, path: [...c.path], memories: [...c.memories], relationships: [...c.relationships], habits: { ...c.habits }, personality: { ...c.personality } })),
       buildings: this.buildings.map(b => ({ ...b })),
       tiles: this.tiles.map(t => ({ ...t })),
+      recentDeaths: this.recentDeaths,
+      activeEvent: this.activeEvent,
     }
   }
 
@@ -307,5 +335,7 @@ export class SimulationEngine {
       this.pathfindingGrid.rebuild(this.tiles, this.buildings)
       this.tilesChanged = true
       this.buildingsChanged = true
+      this.recentDeaths = data.recentDeaths ?? []
+      this.activeEvent = data.activeEvent ?? null
     }
 }
