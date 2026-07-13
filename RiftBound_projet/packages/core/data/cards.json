@@ -1,0 +1,112 @@
+[
+  {
+    "id": "OGN-L01",
+    "name": "Training Legend",
+    "type": "Legend",
+    "cost": { "energy": 0, "power": 0 },
+    "keywords": [],
+    "tags": [],
+    "text": "Official training Champion Legend (Fury/Calm).",
+    "domains": ["Fury", "Calm"],
+    "championTag": "Trainee"
+  },
+  {
+    "id": "OGN-C01",
+    "name": "Trainee Champion",
+    "type": "Unit",
+    "cost": { "energy": 0, "power": 0 },
+    "keywords": [],
+    "tags": [],
+    "text": "Chosen Champion for training decks.",
+    "might": 3,
+    "domains": ["Fury"],
+    "championTag": "Trainee",
+    "isChampionUnit": true
+  },
+  {
+    "id": "OGN-005",
+    "name": "Training Field",
+    "type": "Battlefield",
+    "cost": { "energy": 0, "power": 0 },
+    "keywords": [],
+    "tags": [],
+    "text": "Duel battlefield."
+  },
+  {
+    "id": "OGN-R01",
+    "name": "Fury Rune",
+    "type": "Rune",
+    "cost": { "energy": 0, "power": 0 },
+    "keywords": [],
+    "tags": [],
+    "text": "Exhaust: Add 1 Energy. Recycle: Add 1 Power.",
+    "domains": ["Fury"]
+  },
+  {
+    "id": "OGN-R02",
+    "name": "Calm Rune",
+    "type": "Rune",
+    "cost": { "energy": 0, "power": 0 },
+    "keywords": [],
+    "tags": [],
+    "text": "Exhaust: Add 1 Energy. Recycle: Add 1 Power.",
+    "domains": ["Calm"]
+  },
+  {
+    "id": "OGN-001",
+    "name": "Training Recruit",
+    "type": "Unit",
+    "cost": { "energy": 1, "power": 0 },
+    "keywords": [],
+    "tags": [],
+    "text": "A basic unit for sandbox training.",
+    "might": 2,
+    "domains": ["Fury"]
+  },
+  {
+    "id": "OGN-002",
+    "name": "Reactive Ward",
+    "type": "Spell",
+    "cost": { "energy": 1, "power": 1 },
+    "keywords": ["Reaction"],
+    "tags": ["REACTION"],
+    "text": "Reaction spell.",
+    "domains": ["Calm"]
+  },
+  {
+    "id": "OGN-003",
+    "name": "Ambush Cache",
+    "type": "Gear",
+    "cost": { "energy": 0, "power": 1 },
+    "keywords": ["Hidden"],
+    "tags": ["HIDDEN"],
+    "text": "Hidden gear.",
+    "domains": ["Fury"]
+  },
+  {
+    "id": "OGN-004",
+    "name": "Chain Lightning",
+    "type": "Spell",
+    "cost": { "energy": 2, "power": 0 },
+    "keywords": ["Action"],
+    "tags": ["ACTION"],
+    "text": "Action spell.",
+    "domains": ["Fury"]
+  },
+  { "id": "OGN-U01", "name": "Scout A", "type": "Unit", "cost": { "energy": 1, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 1, "domains": ["Fury"] },
+  { "id": "OGN-U02", "name": "Scout B", "type": "Unit", "cost": { "energy": 1, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 2, "domains": ["Calm"] },
+  { "id": "OGN-U03", "name": "Scout C", "type": "Unit", "cost": { "energy": 2, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 2, "domains": ["Fury"] },
+  { "id": "OGN-U04", "name": "Scout D", "type": "Unit", "cost": { "energy": 2, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 3, "domains": ["Calm"] },
+  { "id": "OGN-U05", "name": "Scout E", "type": "Unit", "cost": { "energy": 1, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 1, "domains": ["Fury"] },
+  { "id": "OGN-U06", "name": "Scout F", "type": "Unit", "cost": { "energy": 2, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 2, "domains": ["Calm"] },
+  { "id": "OGN-U07", "name": "Scout G", "type": "Unit", "cost": { "energy": 3, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 4, "domains": ["Fury"] },
+  { "id": "OGN-U08", "name": "Scout H", "type": "Unit", "cost": { "energy": 1, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 1, "domains": ["Calm"] },
+  { "id": "OGN-U09", "name": "Scout I", "type": "Unit", "cost": { "energy": 2, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 3, "domains": ["Fury"] },
+  { "id": "OGN-U10", "name": "Scout J", "type": "Unit", "cost": { "energy": 2, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 2, "domains": ["Calm"] },
+  { "id": "OGN-U11", "name": "Scout K", "type": "Unit", "cost": { "energy": 1, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 2, "domains": ["Fury"] },
+  { "id": "OGN-U12", "name": "Scout L", "type": "Unit", "cost": { "energy": 3, "power": 0 }, "keywords": [], "tags": [], "text": "Training unit.", "might": 3, "domains": ["Calm"] },
+  { "id": "OGN-S01", "name": "Bolt A", "type": "Spell", "cost": { "energy": 1, "power": 0 }, "keywords": ["Action"], "tags": ["ACTION"], "text": "Training spell.", "domains": ["Fury"] },
+  { "id": "OGN-S02", "name": "Bolt B", "type": "Spell", "cost": { "energy": 1, "power": 1 }, "keywords": ["Reaction"], "tags": ["REACTION"], "text": "Training spell.", "domains": ["Calm"] },
+  { "id": "OGN-S03", "name": "Bolt C", "type": "Spell", "cost": { "energy": 2, "power": 0 }, "keywords": ["Action"], "tags": ["ACTION"], "text": "Training spell.", "domains": ["Fury"] },
+  { "id": "OGN-S04", "name": "Bolt D", "type": "Spell", "cost": { "energy": 1, "power": 0 }, "keywords": ["Reaction"], "tags": ["REACTION"], "text": "Training spell.", "domains": ["Calm"] }
+]

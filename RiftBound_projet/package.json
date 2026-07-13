@@ -1,0 +1,27 @@
+{
+  "name": "riftbound-scrim",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sandbox privée de scrims Riftbound — arbitre de règles pour deux joueurs",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @riftbound/core && npm run build -w @riftbound/server && npm run build -w @riftbound/client",
+    "build:core": "npm run build -w @riftbound/core",
+    "dev": "npm run build:core && concurrently -n server,client -c cyan,magenta \"npm run dev -w @riftbound/server\" \"npm run dev -w @riftbound/client\"",
+    "dev:server": "npm run build:core && npm run dev -w @riftbound/server",
+    "dev:client": "npm run dev -w @riftbound/client",
+    "test": "npm run test -w @riftbound/core",
+    "test:watch": "npm run test:watch -w @riftbound/core",
+    "ingest": "npm run ingest -w @riftbound/core",
+    "typecheck": "npm run typecheck -w @riftbound/core && npm run typecheck -w @riftbound/server && npm run typecheck -w @riftbound/client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
